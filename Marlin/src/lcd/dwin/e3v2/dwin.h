@@ -46,6 +46,7 @@ enum menuID : uint8_t {
       ManualLevel,
       ZOffset,
       Preheat,
+      ChangeFilament,
     Control,
       TempMenu,
         Preheat1,
@@ -228,6 +229,14 @@ void Popup_Window_Move();
 void Popup_window_Pause();
 void Popup_window_Stop();
 void Popup_window_SaveLevel();
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  //  void Popup_Window_ChangeFilament(); // TODO
+
+  #if ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
+    void Popup_Window_LoadFilament(const bool unloading=false);
+  #endif
+#endif
 
 
 inline void Main_Menu_Control();
