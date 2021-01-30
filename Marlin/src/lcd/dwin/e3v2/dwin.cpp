@@ -707,6 +707,7 @@ void Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/*=true*/) {
               #else
                 queue.inject_P(PSTR("M600"));
                 // TODO change filament popup
+                Draw_Menu(Prepare, 8);
               #endif
             }
             break;
@@ -986,6 +987,7 @@ void Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/*=true*/) {
               Popup_Window_LoadFilament();
               gcode.process_subcommands_now_P(PSTR("M701"));
               planner.synchronize();
+              Draw_Menu(Prepare, 8);
             }
             break;
           case 2: // Unload Filament
@@ -995,6 +997,7 @@ void Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/*=true*/) {
               Popup_Window_LoadFilament(true);
               gcode.process_subcommands_now_P(PSTR("M702"));
               planner.synchronize();
+              Draw_Menu(Prepare, 8);
             }
             break;
           case 3: // Change Filament
@@ -1003,6 +1006,7 @@ void Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/*=true*/) {
             } else {
               queue.inject_P(PSTR("M600"));
               // TODO change filament popup
+              Draw_Menu(Prepare, 8);
             }
             break;
         }
