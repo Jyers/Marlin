@@ -705,8 +705,9 @@ void Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/*=true*/) {
               #if ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
                 Draw_Menu(ChangeFilament);
               #else
-                queue.inject_P(PSTR("M600"));
-                // TODO change filament popup
+                Popup_Window_ChangeFilament();
+                gcode.process_subcommands_now_P(PSTR("M600 B1"));
+                planner.synchronize();
                 Draw_Menu(Prepare, 8);
               #endif
             }
@@ -1004,8 +1005,9 @@ void Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/*=true*/) {
             if (draw) {
               Draw_Menu_Item(row, ICON_ResumeEEPROM, (char*)"Change Filament", true);
             } else {
-              queue.inject_P(PSTR("M600"));
-              // TODO change filament popup
+              Popup_Window_ChangeFilament();
+              gcode.process_subcommands_now_P(PSTR("M600 B1"));
+              planner.synchronize();
               Draw_Menu(Prepare, 8);
             }
             break;
@@ -1753,11 +1755,18 @@ void Popup_window_SaveLevel() {
 }
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
-  // void Popup_Window_ChangeFilament(); // TODO
+  void Popup_Window_ChangeFilament() {
+    process = Popup;
+    Clear_Screen();
+    DWIN_Draw_Rectangle(1, Color_Bg_Window, 14, 60, 258, 360);
+    DWIN_ICON_Show(ICON, ICON_BLTouch, 101, 105);
+    DWIN_Draw_String(false, true, font8x16, Popup_Text_Color, Color_Bg_Window, (272 - 8 * 15) / 2, 230, (char*)"Filament Change");
+    DWIN_Draw_String(false, true, font8x16, Popup_Text_Color, Color_Bg_Window, (272 - 8 * 26) / 2, 260, (char*)"Please wait while heating.");
+  }
 
   #if ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
     void Popup_Window_LoadFilament(const bool unloading/*=false*/) {
-      process = Wait;
+      process = Popup;
       Clear_Screen();
       DWIN_Draw_Rectangle(1, Color_Bg_Window, 14, 60, 258, 360);
       DWIN_ICON_Show(ICON, ICON_BLTouch, 101, 105);
@@ -2082,6 +2091,9 @@ inline void Confirm_Control() {
       case Complete:
         Draw_Main_Menu();
         break;
+      case M600:
+        Draw_Menu(Prepare, 8);
+        break;
     }
   }
   DWIN_UpdateLCD();
@@ -2307,5 +2319,24 @@ void AudioFeedback(const bool success/*=true*/) {
 inline void HMI_SDCardInit() { card.cdroot(); }
 
 void MarlinUI::refresh() {}
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  #include "../../../feature/pause.h"
+
+  void MarlinUI::pause_show_message(const PauseMessage message, const PauseMode mode, const uint8_t extruder) {
+    // TODO implement remainder of PauseMessage states
+    if (message == PAUSE_MESSAGE_INSERT || message == PAUSE_MESSAGE_WAITING) {
+      process = Confirm;
+      popup = M600;
+      Clear_Screen();
+
+      DWIN_Draw_Rectangle(1, Color_Bg_Window, 14, 60, 258, 360);
+      DWIN_ICON_Show(ICON, ICON_BLTouch, 101, 105);
+      DWIN_Draw_String(false, true, font8x16, Popup_Text_Color, Color_Bg_Window, (272 - 8 * (message == PAUSE_MESSAGE_INSERT ? 15 : 6)) / 2, 230, message == PAUSE_MESSAGE_INSERT ? (char*)"Filament Change" : (char*)"Paused");
+      DWIN_Draw_String(false, true, font8x16, Popup_Text_Color, Color_Bg_Window, (272 - 8 * (message == PAUSE_MESSAGE_INSERT ? 15 : 21 )) / 2, 260, message == PAUSE_MESSAGE_INSERT ? (char*)"Insert Filament" : (char*)"Press to resume print");
+      DWIN_ICON_Show(ICON, ICON_Continue_E, 87, 283);
+    }
+  }
+#endif
 
 #endif

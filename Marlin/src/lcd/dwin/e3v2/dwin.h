@@ -36,7 +36,7 @@ enum processID : uint8_t {
 };
 
 enum popupID : uint8_t {
-  Pause, Stop, Resume, ETemp, Level, Complete
+  Pause, Stop, Resume, ETemp, Level, Complete, M600
 };
 
 enum menuID : uint8_t {
@@ -231,7 +231,7 @@ void Popup_window_Stop();
 void Popup_window_SaveLevel();
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
-  //  void Popup_Window_ChangeFilament(); // TODO
+  void Popup_Window_ChangeFilament();
 
   #if ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
     void Popup_Window_LoadFilament(const bool unloading=false);
