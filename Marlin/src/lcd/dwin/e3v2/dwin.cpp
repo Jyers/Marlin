@@ -1611,7 +1611,7 @@ void Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/*=true*/) {
             Draw_Float(planner.settings.max_feedrate_mm_s[E_AXIS], row, false, 1);
           }
           else {
-            Modify_Value(planner.settings.max_feedrate_mm_s[Z_AXIS], 0, default_max_feedrate[E_AXIS]*2, 1);
+            Modify_Value(planner.settings.max_feedrate_mm_s[E_AXIS], 0, default_max_feedrate[E_AXIS]*2, 1);
           }
           break;
         #endif
