@@ -1697,38 +1697,38 @@ void Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/*=true*/) {
         case JERK_X:
           if (draw) {
             Draw_Menu_Item(row, ICON_MaxSpeedJerkX, (char*)"X Axis");
-            Draw_Float(planner.max_jerk[X_AXIS], row, false, 1);
+            Draw_Float(planner.max_jerk[X_AXIS], row, false, 10);
           }
           else {
-            Modify_Value(planner.max_jerk[X_AXIS], 0, default_max_jerk[X_AXIS]*2, 1);
+            Modify_Value(planner.max_jerk[X_AXIS], 0, default_max_jerk[X_AXIS]*2, 10);
           }
           break;
         case JERK_Y:
           if (draw) {
             Draw_Menu_Item(row, ICON_MaxSpeedJerkY, (char*)"Y Axis");
-            Draw_Float(planner.max_jerk[Y_AXIS], row, false, 1);
+            Draw_Float(planner.max_jerk[Y_AXIS], row, false, 10);
           }
           else {
-            Modify_Value(planner.max_jerk[Y_AXIS], 0, default_max_jerk[Y_AXIS]*2, 1);
+            Modify_Value(planner.max_jerk[Y_AXIS], 0, default_max_jerk[Y_AXIS]*2, 10);
           }
           break;
         case JERK_Z:
           if (draw) {
             Draw_Menu_Item(row, ICON_MaxSpeedJerkZ, (char*)"Z Axis");
-            Draw_Float(planner.max_jerk[Z_AXIS], row, false, 1);
+            Draw_Float(planner.max_jerk[Z_AXIS], row, false, 10);
           }
           else {
-            Modify_Value(planner.max_jerk[Z_AXIS], 0, default_max_jerk[Z_AXIS]*2, 1);
+            Modify_Value(planner.max_jerk[Z_AXIS], 0, default_max_jerk[Z_AXIS]*2, 10);
           }
           break;
         #if HAS_HOTEND
         case JERK_E:
           if (draw) {
             Draw_Menu_Item(row, ICON_MaxSpeedJerkE, (char*)"Extruder");
-            Draw_Float(planner.max_jerk[E_AXIS], row, false, 1);
+            Draw_Float(planner.max_jerk[E_AXIS], row, false, 10);
           }
           else {
-            Modify_Value(planner.max_jerk[E_AXIS], 0, default_max_jerk[E_AXIS]*2, 1);
+            Modify_Value(planner.max_jerk[E_AXIS], 0, default_max_jerk[E_AXIS]*2, 10);
           }
           break;
         #endif
