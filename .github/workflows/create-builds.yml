@@ -36,7 +36,7 @@ jobs:
         cp Configuration\ Files/E3V2\ Templates/Manual\ Mesh\ 3x3/Configuration.h Marlin/Configuration.h
         cp Configuration\ Files/E3V2\ Templates/Manual\ Mesh\ 3x3/Configuration_adv.h Marlin/Configuration_adv.h
         pio run -e STM32F103RET6_creality_prebuild
-        cp .pio/build/STM32F103RET6_creality_prebuild/E3V2-$FIRST_NAME.bin Precompiled\ Firmware/E3V2-$FIRST_NAME.bin
+        cp .pio/build/STM32F103RET6_creality_prebuild/E3V2-$CONFIG.bin Precompiled\ Firmware/E3V2-$CONFIG.bin
       env:
         CONFIG: ManualMesh-3x3
     - name: Restore original config
