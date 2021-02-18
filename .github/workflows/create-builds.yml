@@ -82,7 +82,7 @@ jobs:
         mv backup/Configuration.h Marlin/Configuration.h 
         mv backup/Configuration_adv.h Marlin/Configuration_adv.h
         rmdir backup
-    - name: Commit report
+    - name: Commit new builds
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'github.actions@users.noreply.github.com'
