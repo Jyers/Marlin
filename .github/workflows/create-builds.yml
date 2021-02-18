@@ -5,8 +5,7 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      CONFIG: ManualMesh-3x3
+    
     steps:
     - uses: actions/checkout@v2
     - name: Cache pip
@@ -32,12 +31,14 @@ jobs:
         mkdir backup
         cp Marlin/Configuration.h backup/Configuration.h
         cp Marlin/Configuration_adv.h backup/Configuration_adv.h
-    - name: manual mesh
+    - name: Run PlatformIO manual mesh
       run: |
         cp Configuration\ Files/E3V2\ Templates/Manual\ Mesh\ 3x3/Configuration.h Marlin/Configuration.h
         cp Configuration\ Files/E3V2\ Templates/Manual\ Mesh\ 3x3/Configuration_adv.h Marlin/Configuration_adv.h
-    - name: Run PlatformIO
-      run: pio run -e STM32F103RET6_creality_prebuild
+        pio run -e STM32F103RET6_creality_prebuild
+        cp .pio/build/STM32F103RET6_creality_prebuild/E3V2-$FIRST_NAME.bin Precompiled\ Firmware/E3V2-$FIRST_NAME.bin
+      env:
+        CONFIG: ManualMesh-3x3
     - name: Restore original config
       run: |
         mv backup/Configuration.h Marlin/Configuration.h 
