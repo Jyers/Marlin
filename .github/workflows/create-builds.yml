@@ -4,9 +4,9 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    env:
+      CONFIG: ManualMesh-3x3
     steps:
     - uses: actions/checkout@v2
     - name: Cache pip
@@ -35,7 +35,5 @@ jobs:
       run: |
         cp Configuration Files\E3V2 Templates\Manual Mesh 3x3\Configuration.h Marlin\Configuration.h
         cp Configuration Files\E3V2 Templates\Manual Mesh 3x3\Configuration_adv.h Marlin\Configuration_adv.h
-    env:
-      CONFIG: ManualMesh-3x3
     - name: Run PlatformIO
       run: pio run -e STM32F103RET6_creality_prebuild
