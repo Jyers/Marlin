@@ -31,14 +31,52 @@ jobs:
         mkdir backup
         cp Marlin/Configuration.h backup/Configuration.h
         cp Marlin/Configuration_adv.h backup/Configuration_adv.h
+
+    - name: Run PlatformIO 3x3
+      run: |
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration.h Marlin/Configuration.h
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration_adv.h Marlin/Configuration_adv.h
+        pio run -e STM32F103RET6_creality_prebuild
+        cp .pio/build/STM32F103RET6_creality_prebuild/E3V2-$CONFIG.bin Precompiled\ Firmware/E3V2-$CONFIG.bin
+      env:
+        CONFIG: BLTouch-3x3
+
+    - name: Run PlatformIO 3x3-HS
+      run: |
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration.h Marlin/Configuration.h
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration_adv.h Marlin/Configuration_adv.h
+        pio run -e STM32F103RET6_creality_prebuild
+        cp .pio/build/STM32F103RET6_creality_prebuild/E3V2-$CONFIG.bin Precompiled\ Firmware/E3V2-$CONFIG.bin
+      env:
+        CONFIG: BLTouch-3x3-HS
+
+    - name: Run PlatformIO NoProbe
+      run: |
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration.h Marlin/Configuration.h
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration_adv.h Marlin/Configuration_adv.h
+        pio run -e STM32F103RET6_creality_prebuild
+        cp .pio/build/STM32F103RET6_creality_prebuild/E3V2-$CONFIG.bin Precompiled\ Firmware/E3V2-$CONFIG.bin
+      env:
+        CONFIG: Default-NoProbe
+
+    - name: Run PlatformIO NoProbe-RunoutSensor
+      run: |
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration.h Marlin/Configuration.h
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration_adv.h Marlin/Configuration_adv.h
+        pio run -e STM32F103RET6_creality_prebuild
+        cp .pio/build/STM32F103RET6_creality_prebuild/E3V2-$CONFIG.bin Precompiled\ Firmware/E3V2-$CONFIG.bin
+      env:
+        CONFIG: Default-NoProbe-RunoutSensor
+
     - name: Run PlatformIO manual mesh
       run: |
-        cp Configuration\ Files/E3V2\ Templates/Manual\ Mesh\ 3x3/Configuration.h Marlin/Configuration.h
-        cp Configuration\ Files/E3V2\ Templates/Manual\ Mesh\ 3x3/Configuration_adv.h Marlin/Configuration_adv.h
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration.h Marlin/Configuration.h
+        cp Configuration\ Files/E3V2\ Templates/$CONFIG/Configuration_adv.h Marlin/Configuration_adv.h
         pio run -e STM32F103RET6_creality_prebuild
         cp .pio/build/STM32F103RET6_creality_prebuild/E3V2-$CONFIG.bin Precompiled\ Firmware/E3V2-$CONFIG.bin
       env:
         CONFIG: ManualMesh-3x3
+
     - name: Restore original config
       run: |
         mv backup/Configuration.h Marlin/Configuration.h 
@@ -48,6 +86,7 @@ jobs:
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'github.actions@users.noreply.github.com'
+        git add .
         git commit -am "New Precompiled Firmware"
         git push
     
