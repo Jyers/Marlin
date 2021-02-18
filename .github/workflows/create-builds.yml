@@ -27,5 +27,15 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade platformio
+    - name: backup config
+      run: |
+        cp Marlin\Configuration.h config\Configuration.h
+        cp Marlin\Configuration_adv.h config\Configuration_adv.h
+    - name: manual mesh
+      run: |
+        cp Configuration Files\E3V2 Templates\Manual Mesh 3x3\Configuration.h Marlin\Configuration.h
+        cp Configuration Files\E3V2 Templates\Manual Mesh 3x3\Configuration_adv.h Marlin\Configuration_adv.h
+    env:
+      CONFIG: ManualMesh-3x3
     - name: Run PlatformIO
-      run: pio run -e STM32F103RET6_creality
+      run: pio run -e STM32F103RET6_creality_prebuild
