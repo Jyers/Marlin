@@ -255,3 +255,25 @@
   }
 
 #endif // AUTO_BED_LEVELING_UBL
+
+float unified_bed_leveling::get_max_value() {
+  float max = __FLT_MIN__;
+  for (auto x = 0; x < GRID_MAX_POINTS_X; x++) {
+    for (auto y = 0; y < GRID_MAX_POINTS_Y; y++) {
+      if (z_values[x][y] > max)
+        max = z_values[x][y];
+    }
+  }
+  return max;
+}
+
+float unified_bed_leveling::get_min_value() {
+  float min = __FLT_MAX__;
+   for (auto x = 0; x < GRID_MAX_POINTS_X; x++) {
+    for (auto y = 0; y < GRID_MAX_POINTS_Y; y++) {
+      if (z_values[x][y] < min)
+        min = z_values[x][y];
+    }
+  }
+  return min;
+}
