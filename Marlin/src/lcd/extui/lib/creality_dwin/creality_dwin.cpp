@@ -2174,6 +2174,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               gcode.process_subcommands_now_P(PSTR("G29 P0\nG29 P1"));
               gcode.process_subcommands_now_P(PSTR("G29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nM420 S1"));
               planner.synchronize();
+              Redraw_Menu();
             }
             break;
           #endif
