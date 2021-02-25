@@ -60,7 +60,7 @@
   #define strcasecmp_P(a, b) strcasecmp((a), (b))
 #endif
 
-#if HAS_ONESTEP_LEVELING
+#if ANY(HAS_ONESTEP_LEVELING, AUTO_BED_LEVELING_UBL)
   #include "../../feature/bedlevel/bedlevel.h"
 #endif
 
@@ -165,6 +165,15 @@ uint8_t gridpoint;
 
 CrealityDWINClass CrealityDWIN;
 
+#if ENABLED(AUTO_BED_LEVELING_UBL)
+  struct AutoMesh_Settings {
+    bool viewer_asymmetric_range = false;
+    uint8_t tilt_grid = 2;
+  };
+  AutoMesh_Settings automesh_settings = AutoMesh_Settings();
+#endif
+
+
 /* General Display Functions */
 
 inline void CrealityDWINClass::Clear_Screen(uint8_t e/*=3*/) {
@@ -241,7 +250,7 @@ void CrealityDWINClass::Main_Menu_Icons() {
     DWIN_ICON_Show(ICON, ICON_Control_0, 17, 246);
     DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 43, 317, F("Control"));
   }
-  #if ANY(HAS_ONESTEP_LEVELING, PROBE_MANUALLY) 
+  #if ANY(HAS_ONESTEP_LEVELING, AUTO_BED_LEVELING_UBL, PROBE_MANUALLY) 
     if (selection == 3) {
       DWIN_ICON_Show(ICON, ICON_Leveling_1, 145, 246);
       DWIN_Draw_Rectangle(0, Color_White, 145, 246, 254, 345);
@@ -274,6 +283,52 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
   DWIN_ICON_Show(ICON, ICON_LOGO, 71, 72);
   Main_Menu_Icons();
 }
+
+#if ENABLED(AUTO_BED_LEVELING_UBL)
+  void CrealityDWINClass::Draw_Bed_Mesh(int16_t selected, uint8_t gridline_width, uint16_t padding_x, uint16_t padding_y_top) {
+    const uint16_t square = DWIN_WIDTH - padding_x - padding_x;
+    const uint16_t cell_width_px  = square / GRID_MAX_POINTS_X;
+    const uint16_t cell_height_px = square / GRID_MAX_POINTS_Y;
+    const float v_max = abs(ubl.get_max_value()), v_min = abs(ubl.get_min_value()), range = max(v_min, v_max);
+    // Clear background from previous selection and select new square
+    DWIN_Draw_Rectangle(1, Color_Bg_Black, max(0, padding_x - gridline_width), max(0, padding_y_top - gridline_width), padding_x + square, padding_y_top + square);
+    if (selected >= 0) {
+      auto selected_y = selected / GRID_MAX_POINTS_X;
+      auto selected_x = selected - (GRID_MAX_POINTS_X * selected_y);
+      auto start_y_px = padding_y_top + selected_y * cell_height_px;
+      auto start_x_px = padding_x + selected_x * cell_width_px;
+      DWIN_Draw_Rectangle(1, Color_White, max(0, start_x_px - gridline_width), max(0, start_y_px - gridline_width), start_x_px + cell_width_px, start_y_px + cell_height_px);
+    }
+    // Draw value squares
+    #if ANY(MESH_LEVELING, AUTO_BED_LEVELING_BILINEAR, AUTO_BED_LEVELING_UBL)
+      for (auto x = 0; x < GRID_MAX_POINTS_X; x++) {
+        for (auto y = 0; y < GRID_MAX_POINTS_Y; y++) {
+          auto start_x_px = padding_x + x * cell_width_px;
+          auto start_y_px = padding_y_top + y * cell_height_px;
+          DWIN_Draw_Rectangle(1, // colors: http://www.barth-dev.de/online/rgb565-color-picker/
+            isnan(ubl.z_values[x][y]) || ubl.z_values[x][y] == 0 ? Color_Grey : 
+              (ubl.z_values[x][y] < 0 ? 
+                round(0b11111 * -ubl.z_values[x][y] / (!automesh_settings.viewer_asymmetric_range ? range : v_min)) << 11 : 
+                round(0b11111 *  ubl.z_values[x][y] / (!automesh_settings.viewer_asymmetric_range ? range : v_max)) << 5), 
+            start_x_px, start_y_px, start_x_px + cell_width_px - 1 - gridline_width, start_y_px + cell_height_px - 1 - gridline_width);
+        }
+      }
+    #endif
+  }
+
+  void CrealityDWINClass::Set_Mesh_Viewer_Status() {
+    char msg[64] {};
+    const float v_max = abs(ubl.get_max_value()), v_min = abs(ubl.get_min_value()), range = max(v_min, v_max);
+    if (automesh_settings.viewer_asymmetric_range) {
+      sprintf(msg, "Red %.3f..0..%.3f Green", -v_min, v_max);
+    } else {
+      sprintf(msg, "Red %.3f..0..%.3f Green", -range, range);
+    }
+    Update_Status(msg);
+  }
+#endif
+
+
 
 void CrealityDWINClass::Print_Screen_Icons() {
   if (selection == 0) {
@@ -702,7 +757,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           break;
         case PREPARE_COOLDOWN:
           if (draw) {
-            Draw_Menu_Item(row, ICON_Cool, (char*)"Cooldown", true);
+            Draw_Menu_Item(row, ICON_Cool, (char*)"Cooldown");
           } 
           else {
             thermalManager.zero_fan_speeds();
@@ -1162,7 +1217,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           break;
         case CONTROL_TEMP:
           if (draw) {
-            Draw_Menu_Item(row, ICON_Temperature, (char*)"Temperature");
+            Draw_Menu_Item(row, ICON_Temperature, (char*)"Temperature", true);
           }
           else {
             Draw_Menu(TempMenu);
@@ -1170,7 +1225,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           break;
         case CONTROL_MOTION:
           if (draw) {
-            Draw_Menu_Item(row, ICON_Motion, (char*)"Motion");
+            Draw_Menu_Item(row, ICON_Motion, (char*)"Motion", true);
           }
           else {
             Draw_Menu(Motion);
@@ -1178,7 +1233,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           break;
         case CONTROL_ADVANCED:
           if (draw) {
-            Draw_Menu_Item(row, ICON_Version, (char*)"Advanced");
+            Draw_Menu_Item(row, ICON_Version, (char*)"Advanced", true);
           }
           else {
             Draw_Menu(Advanced);
@@ -1195,7 +1250,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           break;
         case CONTROL_RESTORE:
           if (draw) {
-            Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Restore Setting");
+            Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Restore Settings");
           }
           else {
             AudioFeedback(settings.load());
@@ -1203,7 +1258,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           break;
         case CONTROL_RESET:
           if (draw) {
-            Draw_Menu_Item(row, ICON_Temperature, (char*)"Reset Defaults");
+            Draw_Menu_Item(row, ICON_Temperature, (char*)"Reset to Defaults");
           }
           else {
             settings.reset();
@@ -1994,6 +2049,143 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           break;
       }
       break;
+    #if ENABLED(AUTO_BED_LEVELING_UBL)
+      #define AMESH_BACK 0
+      #define AMESH_ACTIVE (AMESH_BACK + 1)
+      #define AMESH_VIEW (AMESH_ACTIVE + 1)
+      #define AMESH_GET_TILT (AMESH_VIEW + 1)
+      #define AMESH_GET_MESH (AMESH_GET_TILT + 1)
+      #define AMESH_FADE (AMESH_GET_MESH + 1)
+      #define AMESH_LOAD (AMESH_FADE + 1)
+      #define AMESH_SAVE (AMESH_LOAD + 1)
+      #define AMESH_NEW (AMESH_SAVE + 1)
+      #define AMESH_VIEW_ASYMMETRIC (AMESH_NEW + 1)
+      #define AMESH_GET_TILT_GRID (AMESH_VIEW_ASYMMETRIC + 1)
+      #define AMESH_TOTAL AMESH_GET_TILT_GRID
+
+      case AutoMesh:
+        switch (item) {
+          case AMESH_BACK:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+            } else {
+              Draw_Main_Menu(3);
+            }
+            break;
+          case AMESH_ACTIVE:
+            if (draw) {
+              Draw_Menu_Item(row, planner.leveling_active ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"UBL active");
+            } else {
+              set_bed_leveling_enabled(!planner.leveling_active);
+              Draw_Menu(AutoMesh, AMESH_ACTIVE, scrollpos);
+            }
+            break;
+          case AMESH_VIEW:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_PrintSize, (char*)"View current mesh", true);
+            } else {
+              Draw_Menu(MeshViewer);
+            }
+            break;
+          case AMESH_GET_TILT:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Tilt, (char*)"Tilt current mesh");
+            } else {
+              Popup_Handler(Level);
+
+              char buf[10];
+              if (automesh_settings.tilt_grid > 1) {
+                sprintf(buf, "G29 J%i", automesh_settings.tilt_grid);
+              } else {
+                sprintf(buf, "G29 J");
+              }
+              gcode.process_subcommands_now_P(PSTR(buf));
+              planner.synchronize();
+              Draw_Menu(AutoMesh, AMESH_GET_TILT, scrollpos);
+            }
+            break;
+          case AMESH_GET_MESH:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Mesh, (char*)"Autolevel new mesh");
+            } else {
+              Popup_Handler(Level);
+              gcode.process_subcommands_now_P(PSTR("G29 P0\nG29 P1\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nM420 S1"));
+              planner.synchronize();
+              Draw_Menu(AutoMesh, AMESH_GET_MESH, scrollpos);
+            }
+            break;
+          case AMESH_FADE:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Fade, (char*)"Fade");
+              Draw_Float(planner.z_fade_height, row, 0, 1);
+            } else {
+              Modify_Value(planner.z_fade_height, 0, Z_MAX_POS, 1);
+              planner.z_fade_height = -1;
+              set_z_fade_height(planner.z_fade_height);
+            }
+            break;
+          case AMESH_LOAD:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Load mesh");
+            } else {
+              gcode.process_subcommands_now_P(PSTR("G29 L0"));
+              planner.synchronize();
+              AudioFeedback(true);
+            }
+            break;
+          case AMESH_SAVE:
+            if(draw) {
+              Draw_Menu_Item(row, ICON_WriteEEPROM, (char*)"Save mesh (excl. settings)");
+            } else {
+              gcode.process_subcommands_now_P(PSTR("G29 S0"));
+              planner.synchronize();
+              AudioFeedback(true);
+            }
+            break;
+          case AMESH_NEW:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Mesh, (char*)"Zero current mesh");
+            } else {
+              gcode.process_subcommands_now_P(PSTR("G29 P0"));
+              planner.synchronize();
+            }
+            break;
+          case AMESH_VIEW_ASYMMETRIC:
+            if (draw) {
+              Draw_Menu_Item(row, automesh_settings.viewer_asymmetric_range ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"Viewer asymmetric range");
+            } else {
+              automesh_settings.viewer_asymmetric_range = !automesh_settings.viewer_asymmetric_range;
+              Draw_Menu(AutoMesh, AMESH_VIEW_ASYMMETRIC, scrollpos);
+            }
+            break;
+          case AMESH_GET_TILT_GRID:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Tilt, (char*)"Tilt probing grid");
+              Draw_Float(automesh_settings.tilt_grid, row, 0, 1);
+            } else {
+              Modify_Value(automesh_settings.tilt_grid, 1, 15, 1);
+            }
+            break;
+        }
+        break;
+      case MeshViewer:
+        #define MESHVIEW_BACK 0
+        #define MESHVIEW_TOTAL MESHVIEW_BACK //(MESHVIEW_BACK + GRID_MAX_POINTS_X * GRID_MAX_POINTS_Y)
+        
+        Draw_Menu_Item(0, ICON_Back, (char*)"Back");
+        Draw_Bed_Mesh();
+        Set_Mesh_Viewer_Status();
+        
+        switch (item) {
+          case MESHVIEW_BACK:
+            if (!draw)  {
+              Draw_Menu(AutoMesh, AMESH_VIEW);
+              Update_Status("");
+            }
+            break;
+        }
+        break;
+    #endif
     #if ENABLED(PROBE_MANUALLY)
 
       #define MMESH_BACK 0
@@ -2271,9 +2463,15 @@ char* CrealityDWINClass::Get_Menu_Title(uint8_t menu) {
       return (char*)"Info";
     case InfoMain:
       return (char*)"Info";
+    #if ENABLED(AUTO_BED_LEVELING_UBL)
+      case AutoMesh:
+        return (char*)"Mesh Bed Leveling";
+      case MeshViewer:
+        return (char*)"Mesh Viewer";
+    #endif
     #if ENABLED(PROBE_MANUALLY)
-    case ManualMesh:
-      return (char*)"Mesh Bed Leveling";
+      case ManualMesh:
+        return (char*)"Mesh Bed Leveling";
     #endif
     case Tune:
       return (char*)"Tune";
@@ -2344,8 +2542,14 @@ int CrealityDWINClass::Get_Menu_Size(uint8_t menu) {
     case InfoMain:
       return INFO_TOTAL;
     #if ENABLED(PROBE_MANUALLY)
-    case ManualMesh:
-      return MMESH_TOTAL;
+      case ManualMesh:
+        return MMESH_TOTAL;
+    #endif
+    #if ENABLED(AUTO_BED_LEVELING_UBL)
+      case AutoMesh:
+        return AMESH_TOTAL;
+      case MeshViewer:
+        return MESHVIEW_TOTAL;
     #endif
     case Tune:
       return TUNE_TOTAL;
@@ -2443,7 +2647,9 @@ inline void CrealityDWINClass::Main_Menu_Control() {
         Draw_Menu(Control);
         break;
       case 3:
-        #if HAS_ONESTEP_LEVELING
+        #if ENABLED(AUTO_BED_LEVELING_UBL)
+          Draw_Menu(AutoMesh);
+        #elif HAS_ONESTEP_LEVELING
           Popup_Handler(Level);
           gcode.process_subcommands_now_P(PSTR("G28\nG29"));
           planner.synchronize();

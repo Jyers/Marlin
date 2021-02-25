@@ -62,6 +62,8 @@ enum menuID : uint8_t {
       Advanced,
       Info,
     ManualMesh,
+    AutoMesh,
+      MeshViewer,
     InfoMain,
   Tune
 };
@@ -169,6 +171,14 @@ enum menuID : uint8_t {
 #define ICON_Info_0               90
 #define ICON_Info_1               91
 
+// Custom icons
+#define ICON_Checkbox_F           200
+#define ICON_Checkbox_T           201
+#define ICON_Fade                 202
+#define ICON_Mesh                 203
+#define ICON_Tilt                 204
+
+
 #define font6x12  0x00
 #define font8x16  0x01
 #define font10x20 0x02
@@ -198,7 +208,7 @@ extern millis_t dwin_heat_time;
 
 class CrealityDWINClass {
 
-public:
+  public:
 
   inline void Clear_Screen(uint8_t e=3);
   inline void Draw_Float(float value, uint8_t row, bool selected=false, uint8_t minunit=10);
@@ -215,12 +225,18 @@ public:
   void Draw_Print_ProgressRemain();
   void Draw_Print_ProgressElapsed();
   void Draw_Print_confirm();
+  
   void Draw_SD_Item(uint8_t item, uint8_t row);
   void Draw_SD_List(bool removed=false);
   void Draw_Status_Area(bool icons=false);
   void Draw_Popup(const char *line1, const char *line2, const char *line3, uint8_t mode, uint8_t icon=0);
   void Popup_Select();
   void Update_Status_Bar();
+
+  #if ENABLED(AUTO_BED_LEVELING_UBL)
+    void Draw_Bed_Mesh(int16_t selected = -1, uint8_t gridline_width = 1, uint16_t padding_x = 8, uint16_t padding_y_top = 40 + 53 - 7);
+    void Set_Mesh_Viewer_Status();
+  #endif
 
 
   char* Get_Menu_Title(uint8_t menu);
