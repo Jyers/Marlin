@@ -794,11 +794,14 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           break;
         case PREPARE_HOME:
           if (draw) {
-            Draw_Menu_Item(row, ICON_SetHome, (char*)"Auto Home & center");
+            Draw_Menu_Item(row, ICON_SetHome, (char*)"Auto Home");
           }
           else {
             Popup_Handler(Home);
-            gcode.process_subcommands_now_P(PSTR("G28\nG0 X" STRINGIFY(Z_SAFE_HOMING_X_POINT) " Y" STRINGIFY(Z_SAFE_HOMING_Y_POINT)));
+            gcode.process_subcommands_now_P(PSTR("G28"));
+            #if ENABLED(Z_SAFE_HOMING)
+              gcode.process_subcommands_now_P(PSTR("G0 X" STRINGIFY(Z_SAFE_HOMING_X_POINT) " Y" STRINGIFY(Z_SAFE_HOMING_Y_POINT)));
+            #endif
             planner.synchronize();
             Draw_Menu(Prepare, PREPARE_HOME);
           }
