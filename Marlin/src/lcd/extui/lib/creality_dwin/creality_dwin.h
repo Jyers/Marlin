@@ -62,8 +62,10 @@ enum menuID : uint8_t {
       Advanced,
       Info,
     ManualMesh,
-    AutoMesh,
+    UBL,
       MeshViewer,
+      UBLManual,
+      UBLHelp,
     InfoMain,
   Tune
 };
@@ -215,6 +217,7 @@ class CrealityDWINClass {
   inline void Draw_Title(char* title);
   inline void Draw_Menu_Item(uint8_t row, uint8_t icon=0, char * const label=(char*)"", bool more=false);
   inline void Draw_Menu(uint8_t menu, uint8_t select=0, uint8_t scroll=0);
+  inline void Redraw_Menu();
 
 
   void Main_Menu_Icons();
