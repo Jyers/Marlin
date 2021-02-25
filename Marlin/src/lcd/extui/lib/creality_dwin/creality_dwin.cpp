@@ -168,6 +168,7 @@ CrealityDWINClass CrealityDWIN;
 #if ENABLED(AUTO_BED_LEVELING_UBL)
   struct UBL_Settings {
     bool viewer_asymmetric_range = false;
+    bool viewer_print_value = false;
     uint8_t tilt_grid = 2;
     bool goto_mesh_value = false;
     bool mesh_step_warning = false;
@@ -304,24 +305,49 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
     // Clear background from previous selection and select new square
     DWIN_Draw_Rectangle(1, Color_Bg_Black, max(0, padding_x - gridline_width), max(0, padding_y_top - gridline_width), padding_x + square, padding_y_top + square);
     if (selected >= 0) {
-      auto selected_y = selected / GRID_MAX_POINTS_X;
-      auto selected_x = selected - (GRID_MAX_POINTS_X * selected_y);
-      auto start_y_px = padding_y_top + selected_y * cell_height_px;
-      auto start_x_px = padding_x + selected_x * cell_width_px;
+      const auto selected_y = selected / GRID_MAX_POINTS_X;
+      const auto selected_x = selected - (GRID_MAX_POINTS_X * selected_y);
+      const auto start_y_px = padding_y_top + selected_y * cell_height_px;
+      const auto start_x_px = padding_x + selected_x * cell_width_px;
       DWIN_Draw_Rectangle(1, Color_White, max(0, start_x_px - gridline_width), max(0, start_y_px - gridline_width), start_x_px + cell_width_px, start_y_px + cell_height_px);
     }
-    // Draw value squares
+    // Draw value square grid
+    char buf[8];
     #if ANY(MESH_LEVELING, AUTO_BED_LEVELING_BILINEAR, AUTO_BED_LEVELING_UBL)
-      for (auto x = 0; x < GRID_MAX_POINTS_X; x++) {
-        for (auto y = 0; y < GRID_MAX_POINTS_Y; y++) {
-          auto start_x_px = padding_x + x * cell_width_px;
-          auto start_y_px = padding_y_top + y * cell_height_px;
-          DWIN_Draw_Rectangle(1, // colors: http://www.barth-dev.de/online/rgb565-color-picker/
-            isnan(ubl.z_values[x][y]) ? Color_Grey : 
-              (ubl.z_values[x][y] < 0 ? 
-                round(0b11111 * -ubl.z_values[x][y] / (!ubl_conf.viewer_asymmetric_range ? range : v_min)) << 11 : 
-                round(0b11111 *  ubl.z_values[x][y] / (!ubl_conf.viewer_asymmetric_range ? range : v_max)) << 5), 
-            start_x_px, start_y_px, start_x_px + cell_width_px - 1 - gridline_width, start_y_px + cell_height_px - 1 - gridline_width);
+      GRID_LOOP(x, y) {
+        const auto start_x_px = padding_x + x * cell_width_px;
+        const auto end_x_px = start_x_px + cell_width_px - 1 - gridline_width;
+        const auto start_y_px = padding_y_top + (GRID_MAX_POINTS_Y - y - 1) * cell_height_px;
+        const auto end_y_px = start_y_px + cell_height_px - 1 - gridline_width;
+        DWIN_Draw_Rectangle(1, // colors: http://www.barth-dev.de/online/rgb565-color-picker/
+          isnan(ubl.z_values[x][y]) ? Color_Grey : (
+            (ubl.z_values[x][y] < 0 ? 
+              round(0b11111 * -ubl.z_values[x][y] / (!ubl_conf.viewer_asymmetric_range ? range : v_min)) << 11 : 
+              round(0b111111 *  ubl.z_values[x][y] / (!ubl_conf.viewer_asymmetric_range ? range : v_max)) << 5) |
+                min(0b11111, (((uint8_t)abs(ubl.z_values[x][y]) / 10) * 4))), 
+          start_x_px, start_y_px, end_x_px, end_y_px);
+        while (LCD_SERIAL.availableForWrite() < 32) { // wait for serial to be available without the MCU resetting (is there a watchdog?)
+            gcode.process_subcommands_now_P("G4 P10");
+            planner.synchronize();
+          } 
+        if (ubl_conf.viewer_print_value) { // Draw value text
+          gcode.process_subcommands_now_P("G4 P10"); // just crashes without additional delay
+          planner.synchronize();
+          int8_t offset_x, offset_y = cell_height_px / 2 - 6;
+          if (isnan(ubl.z_values[x][y])) {
+            DWIN_Draw_String(false, false, font6x12, Color_White, Color_Bg_Blue, start_x_px + cell_width_px / 2 - 5, start_y_px + offset_y, F("X"));
+          } else {
+            if (GRID_MAX_POINTS_X < 10) {
+              sprintf(buf, "%.2f", abs(ubl.z_values[x][y]));
+            } else {
+              sprintf(buf, "%02i", (uint16_t)(abs(ubl.z_values[x][y] - (int16_t)ubl.z_values[x][y]) * 100));
+            }
+            offset_x = cell_width_px / 2 - 3 * (strlen(buf)) - 2;
+            if (!(GRID_MAX_POINTS_X < 10))
+              DWIN_Draw_String(false, false, font6x12, Color_White, Color_Bg_Blue, start_x_px-2 + offset_x, start_y_px + offset_y /*+ square / 2 - 6*/, F("."));
+            DWIN_Draw_String(false, false, font6x12, Color_White, Color_Bg_Blue, start_x_px+1 + offset_x, start_y_px + offset_y /*+ square / 2 - 6*/, buf);
+          }
+          
         }
       }
     #endif
@@ -329,9 +355,10 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
 
   void CrealityDWINClass::Set_Mesh_Viewer_Status() {
     char msg[64] {};
-    const float v_max = abs(ubl.get_max_value()), v_min = abs(ubl.get_min_value()), range = max(v_min, v_max);
-    if (v_min == __FLT_MAX__ || v_max == __FLT_MIN__)
-      return;
+    float v_max = abs(ubl.get_max_value()), v_min = abs(ubl.get_min_value()), range = max(v_min, v_max);
+    if (v_min > 3e+10F) v_min = 0.00001;
+    if (v_max > 3e+10F) v_max = 0.00001;
+    if (range > 3e+10F) range = 0.00001;
     if (ubl_conf.viewer_asymmetric_range) {
       sprintf(msg, "Red %.3f..0..%.3f Green", -v_min, v_max);
     } else {
@@ -2107,7 +2134,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define UBL_MANUAL (UBL_VIEW + 1)
       #define UBL_FADE (UBL_MANUAL + 1)
       #define UBL_VIEW_ASYMMETRIC (UBL_FADE + 1)
-      #define UBL_GET_TILT_GRID (UBL_VIEW_ASYMMETRIC + 1)
+      #define UBL_VIEW_TEXT (UBL_VIEW_ASYMMETRIC + 1)
+      #define UBL_GET_TILT_GRID (UBL_VIEW_TEXT + 1)
       #define UBL_LOAD (UBL_GET_TILT_GRID + 1)
       #define UBL_SAVE (UBL_LOAD + 1)
       #define UBL_ZERO (UBL_SAVE + 1)
@@ -2163,7 +2191,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               }
               gcode.process_subcommands_now_P(PSTR(buf));
               planner.synchronize();
-              Redraw_Menu();
+              Confirm_Handler("The mesh has NOT been saved");
             }
             break;
           case UBL_GET_MESH:
@@ -2252,6 +2280,14 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Redraw_Menu();
             }
             break;
+          case UBL_VIEW_TEXT:
+            if (draw) {
+              Draw_Menu_Item(row, ubl_conf.viewer_print_value ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"Viewer show values");
+            } else {
+              ubl_conf.viewer_print_value = !ubl_conf.viewer_print_value;
+              Redraw_Menu();
+            }
+            break;
           case UBL_GET_TILT_GRID:
             if (draw) {
               Draw_Menu_Item(row, ICON_Tilt, (char*)"Tilt probing grid");
@@ -2273,13 +2309,13 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #define MESHVIEW_BACK 0
         #define MESHVIEW_TOTAL MESHVIEW_BACK //(MESHVIEW_BACK + GRID_MAX_POINTS_X * GRID_MAX_POINTS_Y)
         
-        Draw_Menu_Item(0, ICON_Back, (char*)"Back");
-        Draw_Bed_Mesh();
-        Set_Mesh_Viewer_Status();
-        
         switch (item) {
           case MESHVIEW_BACK:
-            if (!draw)  {
+            if (draw) {
+              Draw_Menu_Item(0, ICON_Back, (char*)"Back");
+              Draw_Bed_Mesh();
+              Set_Mesh_Viewer_Status();
+            } else  {
               Draw_Menu(UBL, UBL_VIEW);
               Update_Status("");
             }
@@ -2906,6 +2942,8 @@ void CrealityDWINClass::Confirm_Handler(const char * const msg) {
   }
   else if (strcmp_P(msg, (char*)"Error: Couldn't enable UBL!") == 0) {
     Draw_Popup((char*)"Error: Couldn't enable UBL!", (char*)"Is every mesh point defined?", (char*)"(Gray in viewer are undefined)", Confirm);
+  } else if (strcmp_P(msg, (char*)"The mesh has NOT been saved") == 0) {
+    Draw_Popup((char*)"The mesh is ONLY in RAM!", (char*)"Use Save Mesh to save", (char*)"", Confirm);
   }
   else {
     Draw_Popup(msg, (char*)"Press to Continue", (char*)"", Confirm);
