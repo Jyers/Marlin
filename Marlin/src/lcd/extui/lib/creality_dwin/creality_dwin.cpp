@@ -345,7 +345,7 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
     char buf[20];
     sprintf(buf, "G0 Z%.3f", (!ubl_conf.goto_mesh_value ? Z_CLEARANCE_BETWEEN_PROBES : (ubl_conf.mesh_goto_zhop ? 1. : 0.)));
     gcode.process_subcommands_now_P(buf);
-    sprintf(buf, "G42 I%i J%i", ubl_conf.mesh_y, ubl_conf.mesh_x);
+    sprintf(buf, "G42 I%i J%i", ubl_conf.mesh_x, ubl_conf.mesh_y);
     gcode.process_subcommands_now_P(buf);
     sprintf(buf, "G0 Z%.3f", ubl_conf.goto_mesh_value ? .0 : Z_CLEARANCE_BETWEEN_PROBES);
     gcode.process_subcommands_now_P(buf);
