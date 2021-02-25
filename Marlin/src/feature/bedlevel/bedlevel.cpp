@@ -61,7 +61,7 @@ bool leveling_is_valid() {
  */
 void set_bed_leveling_enabled(const bool enable/*=true*/) {
 
-  const bool can_change = TERN1(AUTO_BED_LEVELING_BILINEAR, !enable || leveling_is_valid());
+  const bool can_change = !enable || leveling_is_valid();
 
   if (can_change && enable != planner.leveling_active) {
 

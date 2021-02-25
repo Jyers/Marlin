@@ -2129,7 +2129,15 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             if (draw) {
               Draw_Menu_Item(row, planner.leveling_active ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"UBL active");
             } else {
-              set_bed_leveling_enabled(!planner.leveling_active);
+              if (!planner.leveling_active) {
+                set_bed_leveling_enabled(!planner.leveling_active);
+                if (!planner.leveling_active) {
+                  Confirm_Handler((char*)"Error: Couldn't enable UBL!");
+                  break;
+                }
+              } else {
+                set_bed_leveling_enabled(!planner.leveling_active);
+              }
               Redraw_Menu();
             }
             break;
@@ -2373,7 +2381,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Draw_Menu_Item(row, ICON_Axis, (char*)"Microstep Down");
             } else {
               if (!ubl_conf.mesh_step_warning && !ubl_conf.goto_mesh_value) {
-                CrealityDWIN.Confirm_Handler((char*)"Z-value not in position");
+                Confirm_Handler((char*)"Z-value not in position");
                 ubl_conf.mesh_step_warning = true;
               } else if (ubl.z_values[ubl_conf.mesh_x][ubl_conf.mesh_y] > MIN_Z_OFFSET) {
                 ubl.z_values[ubl_conf.mesh_x][ubl_conf.mesh_y] -= 0.01;
@@ -2387,7 +2395,13 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             if (draw) {
               Draw_Menu_Item(row, ubl_conf.goto_mesh_value ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"Go to mesh Z value");
             } else {
-              set_bed_leveling_enabled();
+              if (!ubl_conf.goto_mesh_value) {
+                set_bed_leveling_enabled();
+                if (!planner.leveling_active) {
+                  Confirm_Handler((char*)"Error: Couldn't enable UBL!");
+                  break;
+                }
+              }
               ubl_conf.goto_mesh_value = !ubl_conf.goto_mesh_value;
               ubl_manual_move();
             }
@@ -2888,6 +2902,9 @@ void CrealityDWINClass::Confirm_Handler(const char * const msg) {
   } 
   else if (strcmp_P(msg, (char*)"Z-value not in position") == 0) {
     Draw_Popup((char*)"Warning!", (char*)"Nozzle Z is not at 0", (char*)"Consider 'Go to mesh Z value'", Confirm);
+  }
+  else if (strcmp_P(msg, (char*)"Error: Couldn't enable UBL!") == 0) {
+    Draw_Popup((char*)"Error: Couldn't enable UBL!", (char*)"Is every mesh point defined?", (char*)"(Gray in viewer are undefined)", Confirm);
   }
   else {
     Draw_Popup(msg, (char*)"Press to Continue", (char*)"", Confirm);
