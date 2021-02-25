@@ -163,6 +163,8 @@ bool bedonly = false;
 float zoffsetvalue = 0;
 uint8_t gridpoint;
 
+bool probe_deployed = false;
+
 CrealityDWINClass CrealityDWIN;
 
 #if ENABLED(AUTO_BED_LEVELING_UBL)
@@ -871,7 +873,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define MOVE_Y (MOVE_X + 1)
       #define MOVE_Z (MOVE_Y + 1)
       #define MOVE_E (MOVE_Z + ENABLED(HAS_HOTEND))
-      #define MOVE_TOTAL MOVE_E
+      #define MOVE_P (MOVE_E + ENABLED(HAS_BED_PROBE))
+      #define MOVE_TOTAL MOVE_P
 
       switch (item) {
         case MOVE_BACK:
@@ -879,6 +882,10 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu_Item(row, ICON_Back, (char*)"Back");
           }
           else {
+            #if HAS_BED_PROBE
+              probe_deployed = false;
+              probe.set_deployed(probe_deployed);
+            #endif
             Draw_Menu(Prepare, PREPARE_MOVE);
           }
           break;
@@ -910,25 +917,39 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           break;
         #if HAS_HOTEND
-        case MOVE_E:
-          if (draw) {
-            Draw_Menu_Item(row, ICON_Extruder, (char*)"Extruder");
-            current_position.e = 0;
-            sync_plan_position();
-            Draw_Float(current_position.e, item);
-          }
-          else {
-            if (thermalManager.temp_hotend[0].celsius < thermalManager.extrude_min_temp) {
-              Popup_Handler(ETemp);
-            }
-            else {
+          case MOVE_E:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Extruder, (char*)"Extruder");
               current_position.e = 0;
               sync_plan_position();
-              Modify_Value(current_position.e, -500, 500, 10);
+              Draw_Float(current_position.e, item);
             }
-          }
+            else {
+              if (thermalManager.temp_hotend[0].celsius < thermalManager.extrude_min_temp) {
+                Popup_Handler(ETemp);
+              }
+              else {
+                current_position.e = 0;
+                sync_plan_position();
+                Modify_Value(current_position.e, -500, 500, 10);
+              }
+            }
           break;
         #endif
+        #if HAS_BED_PROBE
+          case MOVE_P:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_StockConfiguraton, (char*)"Probe");
+              Draw_Checkbox(row, probe_deployed);
+            }
+            else {
+              probe_deployed = !probe_deployed;
+              probe.set_deployed(probe_deployed);
+              Draw_Checkbox(row, probe_deployed);
+            }
+            break;
+        #endif
+
       }
       break;
     case ManualLevel:
