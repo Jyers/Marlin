@@ -125,7 +125,7 @@ constexpr uint16_t TROWS = 6, MROWS = TROWS - 1,
                    TITLE_HEIGHT = 30,
                    MLINE = 53,
                    LBLX = 60,
-                   MENU_CHR_W = 8, STAT_CHR_W = 10;
+                   MENU_CHR_W = 8, MENU_CHR_H = 16, STAT_CHR_W = 10;
 
 #define MBASE(L) (49 + MLINE * (L))
 
@@ -213,6 +213,10 @@ inline void CrealityDWINClass::Draw_Menu_Item(uint8_t row, uint8_t icon/*=0*/, c
   if (icon) DWIN_ICON_Show(ICON, icon, 26, MBASE(row) - 3); //Draw Menu Icon
   if (more) DWIN_ICON_Show(ICON, ICON_More, 226, MBASE(row) - 3); // Draw More Arrow
   DWIN_Draw_Line(Line_Color, 16, MBASE(row) + 33, 256, MBASE(row) + 34); // Draw Menu Line
+}
+
+inline void CrealityDWINClass::Draw_Checkbox(uint8_t row, bool value) {
+  DWIN_ICON_Show(ICON, (value ? ICON_Checkbox_T : ICON_Checkbox_F), 226, MBASE(row) - 3);
 }
 
 inline void CrealityDWINClass::Draw_Menu(uint8_t menu, uint8_t select/*=0*/, uint8_t scroll/*=0*/) {
@@ -914,7 +918,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Float(current_position.e, item);
           }
           else {
-            if (thermalManager.temp_hotend[0].celsius < EXTRUDE_MINTEMP) {
+            if (thermalManager.temp_hotend[0].celsius < thermalManager.extrude_min_temp) {
               Popup_Handler(ETemp);
             }
             else {
@@ -2032,7 +2036,9 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define ADVANCED_YOFFSET (ADVANCED_XOFFSET + ENABLED(HAS_BED_PROBE))
       #define ADVANCED_LOAD (ADVANCED_YOFFSET + ENABLED(ADVANCED_PAUSE_FEATURE))
       #define ADVANCED_UNLOAD (ADVANCED_LOAD + ENABLED(ADVANCED_PAUSE_FEATURE))
-      #define ADVANCED_TOTAL ADVANCED_UNLOAD
+      #define ADVANCED_COLD_EXTRUDE  (ADVANCED_UNLOAD + ENABLED(PREVENT_COLD_EXTRUSION))
+      #define ADVANCED_POWER_LOSS (ADVANCED_COLD_EXTRUDE + ENABLED(POWER_LOSS_RECOVERY))
+      #define ADVANCED_TOTAL ADVANCED_POWER_LOSS
 
       switch (item) {
         case ADVANCED_BACK:
@@ -2044,44 +2050,68 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           break;
         #if ENABLED(HAS_BED_PROBE)
-        case ADVANCED_XOFFSET:
-          if (draw) {
-            Draw_Menu_Item(row, ICON_StepX, (char*)"Probe X Offset");
-            Draw_Float(probe.offset.x, row, false, 10);
-          }
-          else {
-            Modify_Value(probe.offset.x, -100, 100, 10);
-          }
-          break;
-        case ADVANCED_YOFFSET:
-          if (draw) {
-            Draw_Menu_Item(row, ICON_StepY, (char*)"Probe Y Offset");
-            Draw_Float(probe.offset.y, row, false, 10);
-          }
-          else {
-            Modify_Value(probe.offset.y, -100, 100, 10);
-          }
-          break;
+          case ADVANCED_XOFFSET:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_StepX, (char*)"Probe X Offset");
+              Draw_Float(probe.offset.x, row, false, 10);
+            }
+            else {
+              Modify_Value(probe.offset.x, -100, 100, 10);
+            }
+            break;
+          case ADVANCED_YOFFSET:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_StepY, (char*)"Probe Y Offset");
+              Draw_Float(probe.offset.y, row, false, 10);
+            }
+            else {
+              Modify_Value(probe.offset.y, -100, 100, 10);
+            }
+            break;
         #endif
         #if ENABLED(ADVANCED_PAUSE_FEATURE)
-        case ADVANCED_LOAD:
-          if (draw) {
-            Draw_Menu_Item(row, ICON_WriteEEPROM, (char*)"Load Length");
-            Draw_Float(fc_settings[0].load_length, row, false, 1);
-          }
-          else {
-            Modify_Value(fc_settings[0].load_length, 0, EXTRUDE_MAXLENGTH, 1);
-          }
-          break;
-        case ADVANCED_UNLOAD:
-          if (draw) {
-            Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Unload Length");
-            Draw_Float(fc_settings[0].unload_length, row, false, 1);
-          }
-          else {
-            Modify_Value(fc_settings[0].unload_length, 0, EXTRUDE_MAXLENGTH, 1);
-          }
-          break;
+          case ADVANCED_LOAD:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_WriteEEPROM, (char*)"Load Length");
+              Draw_Float(fc_settings[0].load_length, row, false, 1);
+            }
+            else {
+              Modify_Value(fc_settings[0].load_length, 0, EXTRUDE_MAXLENGTH, 1);
+            }
+            break;
+          case ADVANCED_UNLOAD:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Unload Length");
+              Draw_Float(fc_settings[0].unload_length, row, false, 1);
+            }
+            else {
+              Modify_Value(fc_settings[0].unload_length, 0, EXTRUDE_MAXLENGTH, 1);
+            }
+            break;
+        #endif
+        #if ENABLED(PREVENT_COLD_EXTRUSION)
+          case ADVANCED_COLD_EXTRUDE:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Cool, (char*)"Min extrusion T");
+              Draw_Float(thermalManager.extrude_min_temp, row, false, 1);
+            }
+            else {
+              Modify_Value(thermalManager.extrude_min_temp, 0, MAX_E_TEMP, 1);
+              thermalManager.allow_cold_extrude = (thermalManager.extrude_min_temp == 0);
+            }
+            break;
+        #endif
+        #if ENABLED(POWER_LOSS_RECOVERY)
+          case ADVANCED_POWER_LOSS:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Motion, (char*)"Power-loss recovery");
+              Draw_Checkbox(row, recovery.enabled);
+            }
+            else {
+              recovery.enable(!recovery.enabled);
+              Draw_Checkbox(row, recovery.enabled);
+            }
+            break;
         #endif
       }
       break;
@@ -2094,23 +2124,48 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       switch (item) {
         case INFO_BACK:
           if (draw) {
-            Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+            /*struct printStatistics {    // 16 bytes
+            //const uint8_t magic;    // Magic header, it will always be 0x16
+            uint16_t totalPrints;     // Number of prints
+            uint16_t finishedPrints;  // Number of complete prints
+            uint32_t printTime;       // Accumulated printing time
+            uint32_t longestPrint;    // Longest successful print job
+            float    filamentUsed;    // Accumulated filament consumed in mm
+            }*/
+            char buf[32];
+            char buf2[32];
+            printStatistics ps = print_job_timer.getStats();
 
-            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(MACHINE_SIZE) * MENU_CHR_W) / 2, MBASE(1) - 1, (char*)MACHINE_SIZE);
-            DWIN_ICON_Show(ICON, ICON_PrintSize, 26, MBASE(1) - 3);
+            Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+            
+            sprintf(buf, "%i prints, %i finished", ps.totalPrints, ps.finishedPrints);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, LBLX, MBASE(1) - 1 - MENU_CHR_H * 3 / 5, (char*)buf);
+            sprintf(buf, "%.2f m filament used", ps.filamentUsed / 1000);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, LBLX, MBASE(1) - 1 + MENU_CHR_H * 3 / 5, (char*)buf);
+            DWIN_ICON_Show(ICON, ICON_HotendTemp, 26, MBASE(1) - 3);
             DWIN_Draw_Line(Line_Color, 16, MBASE(1) + 33, 256, MBASE(1) + 34);
 
-            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(SHORT_BUILD_VERSION) * MENU_CHR_W) / 2, MBASE(2) - 1, (char*)SHORT_BUILD_VERSION);
-            DWIN_ICON_Show(ICON, ICON_Version, 26, MBASE(2) - 3);
+            ExtUI::getTotalPrintTime_str(buf2);
+            sprintf(buf, "Print time: %s", buf2);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, LBLX, MBASE(2) - 1 - MENU_CHR_H * 3 / 5, (char*)buf);
+            ExtUI::getLongestPrint_str(buf2);
+            sprintf(buf, "Longest print: %s", buf2);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, LBLX, MBASE(2) - 1 + MENU_CHR_H * 3 / 5, (char*)buf);
+            DWIN_ICON_Show(ICON, ICON_PrintTime, 26, MBASE(2) - 3);
             DWIN_Draw_Line(Line_Color, 16, MBASE(2) + 33, 256, MBASE(2) + 34);
-
-            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen("Build Number: v" BUILD_NUMBER) * MENU_CHR_W) / 2, MBASE(3) - 1, (char*)"Build Number: v" BUILD_NUMBER);
-            DWIN_ICON_Show(ICON, ICON_Version, 26, MBASE(3) - 3);
+            
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(MACHINE_SIZE) * MENU_CHR_W) / 2, MBASE(3) - 1, (char*)MACHINE_SIZE);
+            DWIN_ICON_Show(ICON, ICON_PrintSize, 26, MBASE(3) - 3);
             DWIN_Draw_Line(Line_Color, 16, MBASE(3) + 33, 256, MBASE(3) + 34);
 
-            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(CORP_WEBSITE_E) * MENU_CHR_W) / 2, MBASE(4) - 1, (char*)CORP_WEBSITE_E);
-            DWIN_ICON_Show(ICON, ICON_Contact, 26, MBASE(4) - 3);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(SHORT_BUILD_VERSION) * MENU_CHR_W) / 2, MBASE(4) - 1 - MENU_CHR_H * 3 / 5, (char*)SHORT_BUILD_VERSION);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen("Build Number: v" BUILD_NUMBER) * MENU_CHR_W) / 2, MBASE(4) - 1 + MENU_CHR_H * 3 / 5, (char*)"Build Number: v" BUILD_NUMBER);
+            DWIN_ICON_Show(ICON, ICON_Version, 26, MBASE(4) - 3);
             DWIN_Draw_Line(Line_Color, 16, MBASE(4) + 33, 256, MBASE(4) + 34);
+
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(CORP_WEBSITE_E) * MENU_CHR_W) / 2, MBASE(5) - 1, (char*)CORP_WEBSITE_E);
+            DWIN_ICON_Show(ICON, ICON_Contact, 26, MBASE(5) - 3);
+            DWIN_Draw_Line(Line_Color, 16, MBASE(5) + 33, 256, MBASE(5) + 34);
           }
           else {
             if (menu == Info)
@@ -2155,7 +2210,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
           case UBL_ACTIVE:
             if (draw) {
-              Draw_Menu_Item(row, planner.leveling_active ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"UBL active");
+              Draw_Menu_Item(row, ICON_StockConfiguraton, (char*)"UBL active");
+              Draw_Checkbox(row, planner.leveling_active);
             } else {
               if (!planner.leveling_active) {
                 set_bed_leveling_enabled(!planner.leveling_active);
@@ -2166,7 +2222,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               } else {
                 set_bed_leveling_enabled(!planner.leveling_active);
               }
-              Redraw_Menu();
+              Draw_Checkbox(row, planner.leveling_active);
             }
             break;
           case UBL_VIEW:
@@ -2191,7 +2247,6 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               }
               gcode.process_subcommands_now_P(PSTR(buf));
               planner.synchronize();
-              Confirm_Handler("The mesh has NOT been saved");
             }
             break;
           case UBL_GET_MESH:
@@ -2203,6 +2258,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               gcode.process_subcommands_now_P(PSTR("G29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nM420 S1"));
               planner.synchronize();
               Redraw_Menu();
+              Confirm_Handler("The mesh has NOT been saved");
             }
             break;
           #endif
@@ -2274,18 +2330,20 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
           case UBL_VIEW_ASYMMETRIC:
             if (draw) {
-              Draw_Menu_Item(row, ubl_conf.viewer_asymmetric_range ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"Viewer asymmetric range");
+              Draw_Menu_Item(row, ICON_Axis, (char*)"Viewer asymmetric");
+              Draw_Checkbox(row, ubl_conf.viewer_asymmetric_range);
             } else {
               ubl_conf.viewer_asymmetric_range = !ubl_conf.viewer_asymmetric_range;
-              Redraw_Menu();
+              Draw_Checkbox(row, ubl_conf.viewer_asymmetric_range);
             }
             break;
           case UBL_VIEW_TEXT:
             if (draw) {
-              Draw_Menu_Item(row, ubl_conf.viewer_print_value ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"Viewer show values");
+              Draw_Menu_Item(row, ICON_Contact, (char*)"Viewer show values");
+              Draw_Checkbox(row, ubl_conf.viewer_print_value);
             } else {
               ubl_conf.viewer_print_value = !ubl_conf.viewer_print_value;
-              Redraw_Menu();
+              Draw_Checkbox(row, ubl_conf.viewer_print_value);
             }
             break;
           case UBL_GET_TILT_GRID:
@@ -2430,7 +2488,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
           case UBLM_GOTO_VALUE: 
             if (draw) {
-              Draw_Menu_Item(row, ubl_conf.goto_mesh_value ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"Go to mesh Z value");
+              Draw_Menu_Item(row, ICON_StockConfiguraton, (char*)"Go to mesh Z value");
+              Draw_Checkbox(row, ubl_conf.goto_mesh_value);
             } else {
               if (!ubl_conf.goto_mesh_value) {
                 set_bed_leveling_enabled();
@@ -2446,10 +2505,11 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           case UBLM_GOTO_ZHOP:
             if (ubl_conf.goto_mesh_value) {
               if (draw) {
-                Draw_Menu_Item(row, ubl_conf.mesh_goto_zhop ? ICON_Checkbox_T : ICON_Checkbox_F, (char*)"Z-hop when moving");
+                Draw_Menu_Item(row, ICON_Zoffset, (char*)"Z-hop when moving");
+                Draw_Checkbox(row, ubl_conf.mesh_goto_zhop);
               } else {
                 ubl_conf.mesh_goto_zhop = !ubl_conf.mesh_goto_zhop;
-                Redraw_Menu();
+                Draw_Checkbox(row, ubl_conf.mesh_goto_zhop);
               }
               break;
             }

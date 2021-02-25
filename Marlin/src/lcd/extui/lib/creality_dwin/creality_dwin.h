@@ -214,6 +214,7 @@ class CrealityDWINClass {
 
   inline void Clear_Screen(uint8_t e=3);
   inline void Draw_Float(float value, uint8_t row, bool selected=false, uint8_t minunit=10);
+  inline void Draw_Checkbox(uint8_t row, bool value);
   inline void Draw_Title(char* title);
   inline void Draw_Menu_Item(uint8_t row, uint8_t icon=0, char * const label=(char*)"", bool more=false);
   inline void Draw_Menu(uint8_t menu, uint8_t select=0, uint8_t scroll=0);
