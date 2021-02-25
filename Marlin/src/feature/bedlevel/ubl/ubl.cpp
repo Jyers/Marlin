@@ -42,6 +42,11 @@
 
   #include "math.h"
 
+  // for fill_missing_values_lsf
+  #include "../../libs/least_squares_fit.h"
+  #include "../../libs/vector_3.h"
+
+
   void unified_bed_leveling::echo_name() { SERIAL_ECHOPGM("Unified Bed Leveling"); }
 
   void unified_bed_leveling::report_current_mesh() {
@@ -258,22 +263,70 @@
 
 float unified_bed_leveling::get_max_value() {
   float max = __FLT_MIN__;
-  for (auto x = 0; x < GRID_MAX_POINTS_X; x++) {
-    for (auto y = 0; y < GRID_MAX_POINTS_Y; y++) {
-      if (z_values[x][y] > max)
-        max = z_values[x][y];
-    }
+  GRID_LOOP(x, y) {
+    if (!isnan(z_values[x][y]) && z_values[x][y] > max)
+      max = z_values[x][y];
   }
   return max;
 }
 
 float unified_bed_leveling::get_min_value() {
   float min = __FLT_MAX__;
-   for (auto x = 0; x < GRID_MAX_POINTS_X; x++) {
-    for (auto y = 0; y < GRID_MAX_POINTS_Y; y++) {
-      if (z_values[x][y] < min)
-        min = z_values[x][y];
-    }
+  GRID_LOOP(x, y) {
+    if (!isnan(z_values[x][y]) && z_values[x][y] < min)
+      min = z_values[x][y];
   }
   return min;
+}
+
+void unified_bed_leveling::create_plane_from_mesh() {
+  struct linear_fit_data lsf_results;
+  incremental_LSF_reset(&lsf_results);
+  GRID_LOOP(x, y) {
+    if (!isnan(z_values[x][y])) {
+      xy_pos_t rpos;
+      rpos.x = mesh_index_to_xpos(x);
+      rpos.y = mesh_index_to_ypos(y);
+      incremental_LSF(&lsf_results, rpos, z_values[x][y]);
+    }
+  }
+  
+  if (finish_incremental_LSF(&lsf_results)) {
+    SERIAL_ECHOPGM("Could not complete LSF!");
+    return;
+  }
+
+  set_all_mesh_points_to_value(0);
+
+  matrix_3x3 rotation = matrix_3x3::create_look_at(vector_3(lsf_results.A, lsf_results.B, 1));
+  GRID_LOOP(i, j) {
+    float mx = mesh_index_to_xpos(i),
+          my = mesh_index_to_ypos(j),
+          mz = z_values[i][j];
+
+    if (DEBUGGING(LEVELING)) {
+      DEBUG_ECHOPAIR_F("before rotation = [", mx, 7);
+      DEBUG_CHAR(',');
+      DEBUG_ECHO_F(my, 7);
+      DEBUG_CHAR(',');
+      DEBUG_ECHO_F(mz, 7);
+      DEBUG_ECHOPGM("]   ---> ");
+      DEBUG_DELAY(20);
+    }
+
+    apply_rotation_xyz(rotation, mx, my, mz);
+
+    if (DEBUGGING(LEVELING)) {
+      DEBUG_ECHOPAIR_F("after rotation = [", mx, 7);
+      DEBUG_CHAR(',');
+      DEBUG_ECHO_F(my, 7);
+      DEBUG_CHAR(',');
+      DEBUG_ECHO_F(mz, 7);
+      DEBUG_ECHOLNPGM("]");
+      DEBUG_DELAY(20);
+    }
+
+    z_values[i][j] = mz - lsf_results.D;
+    TERN_(EXTENSIBLE_UI, ExtUI::onMeshUpdate(i, j, z_values[i][j]));
+  }
 }

@@ -105,6 +105,7 @@ class unified_bed_leveling {
     static bool sanity_check();
     static float get_max_value();
     static float get_min_value();
+    static void create_plane_from_mesh();
 
     static void G29() _O0;                          // O0 for no optimization
     static void smart_fill_wlsf(const float &) _O2; // O2 gives smaller code than Os on A2560
