@@ -2145,20 +2145,14 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       switch (item) {
         case INFO_BACK:
           if (draw) {
-            /*struct printStatistics {    // 16 bytes
-            //const uint8_t magic;    // Magic header, it will always be 0x16
-            uint16_t totalPrints;     // Number of prints
-            uint16_t finishedPrints;  // Number of complete prints
-            uint32_t printTime;       // Accumulated printing time
-            uint32_t longestPrint;    // Longest successful print job
-            float    filamentUsed;    // Accumulated filament consumed in mm
-            }*/
+            Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+            
+            #define INFO_OFFSET (ENABLED(PRINTCOUNTER) * 2)
+            #if ENABLED(PRINTCOUNTER)
             char buf[32];
             char buf2[32];
             printStatistics ps = print_job_timer.getStats();
 
-            Draw_Menu_Item(row, ICON_Back, (char*)"Back");
-            
             sprintf(buf, "%i prints, %i finished", ps.totalPrints, ps.finishedPrints);
             DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, LBLX, MBASE(1) - 1 - MENU_CHR_H * 3 / 5, (char*)buf);
             sprintf(buf, "%.2f m filament used", ps.filamentUsed / 1000);
@@ -2174,19 +2168,20 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, LBLX, MBASE(2) - 1 + MENU_CHR_H * 3 / 5, (char*)buf);
             DWIN_ICON_Show(ICON, ICON_PrintTime, 26, MBASE(2) - 3);
             DWIN_Draw_Line(Line_Color, 16, MBASE(2) + 33, 256, MBASE(2) + 34);
+            #endif
             
-            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(MACHINE_SIZE) * MENU_CHR_W) / 2, MBASE(3) - 1, (char*)MACHINE_SIZE);
-            DWIN_ICON_Show(ICON, ICON_PrintSize, 26, MBASE(3) - 3);
-            DWIN_Draw_Line(Line_Color, 16, MBASE(3) + 33, 256, MBASE(3) + 34);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(MACHINE_SIZE) * MENU_CHR_W) / 2, MBASE(INFO_OFFSET + 1) - 1, (char*)MACHINE_SIZE);
+            DWIN_ICON_Show(ICON, ICON_PrintSize, 26, MBASE(INFO_OFFSET + 1) - 3);
+            DWIN_Draw_Line(Line_Color, 16, MBASE(INFO_OFFSET + 1) + 33, 256, MBASE(INFO_OFFSET + 1) + 34);
 
-            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(SHORT_BUILD_VERSION) * MENU_CHR_W) / 2, MBASE(4) - 1 - MENU_CHR_H * 3 / 5, (char*)SHORT_BUILD_VERSION);
-            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen("Build Number: v" BUILD_NUMBER) * MENU_CHR_W) / 2, MBASE(4) - 1 + MENU_CHR_H * 3 / 5, (char*)"Build Number: v" BUILD_NUMBER);
-            DWIN_ICON_Show(ICON, ICON_Version, 26, MBASE(4) - 3);
-            DWIN_Draw_Line(Line_Color, 16, MBASE(4) + 33, 256, MBASE(4) + 34);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(SHORT_BUILD_VERSION) * MENU_CHR_W) / 2, MBASE(INFO_OFFSET + 2) - 1 - MENU_CHR_H * 3 / 5, (char*)SHORT_BUILD_VERSION);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen("Build Number: v" BUILD_NUMBER) * MENU_CHR_W) / 2, MBASE(INFO_OFFSET + 2) - 1 + MENU_CHR_H * 3 / 5, (char*)"Build Number: v" BUILD_NUMBER);
+            DWIN_ICON_Show(ICON, ICON_Version, 26, MBASE(INFO_OFFSET + 2) - 3);
+            DWIN_Draw_Line(Line_Color, 16, MBASE(INFO_OFFSET + 2) + 33, 256, MBASE(INFO_OFFSET + 2) + 34);
 
-            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(CORP_WEBSITE_E) * MENU_CHR_W) / 2, MBASE(5) - 1, (char*)CORP_WEBSITE_E);
-            DWIN_ICON_Show(ICON, ICON_Contact, 26, MBASE(5) - 3);
-            DWIN_Draw_Line(Line_Color, 16, MBASE(5) + 33, 256, MBASE(5) + 34);
+            DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, (DWIN_WIDTH - strlen(CORP_WEBSITE_E) * MENU_CHR_W) / 2, MBASE(INFO_OFFSET + 3) - 1, (char*)CORP_WEBSITE_E);
+            DWIN_ICON_Show(ICON, ICON_Contact, 26, MBASE(INFO_OFFSET + 3) - 3);
+            DWIN_Draw_Line(Line_Color, 16, MBASE(INFO_OFFSET + 3) + 33, 256, MBASE(INFO_OFFSET + 3) + 34);
           }
           else {
             if (menu == Info)
