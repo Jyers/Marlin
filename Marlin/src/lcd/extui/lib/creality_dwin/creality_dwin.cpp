@@ -2407,6 +2407,18 @@ void CrealityDWINClass::Popup_Handler(uint8_t popupid, bool option/*=false*/) {
     case TempWarn:
       Draw_Popup(option ? (char*)"Nozzle temp too low!" : (char*)"Nozzle temp too high!", (char*)"", (char*)"", Wait, option ? ICON_TempTooLow : ICON_TempTooHigh);
       break;
+    case Runout:
+      Draw_Popup((char*)"Filament Runout", (char*)"", (char*)"", Wait, ICON_BLTouch);
+      break;
+    case PidBadExtruder:
+      Draw_Popup((char*)"PID Autotune failed", (char*)"Bad extruder!", (char*)"", Confirm, ICON_BLTouch);
+      break;
+    case PidTimeout:
+      Draw_Popup((char*)"PID Autotune failed", (char*)"Timeout!", (char*)"", Confirm, ICON_BLTouch);
+      break;
+    case PidDone:
+      Draw_Popup((char*)"PID tuning done", (char*)"", (char*)"", Confirm, ICON_BLTouch);
+      break;
   }
 }
 
