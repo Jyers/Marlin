@@ -1937,10 +1937,10 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         case ADVANCED_FILSENSORENABLED:
           if (draw) {
             if (ExtUI::getFilamentRunoutEnabled()) {
-              Draw_Menu_Item(row, ICON_Extruder, (char*)"Disable Filament Sensor");
+              Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor: Enabled");
             }
             else {
-              Draw_Menu_Item(row, ICON_Extruder, (char*)"Enable Filament Sensor");
+              Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor: Disabled");
             }
           }
           else {
