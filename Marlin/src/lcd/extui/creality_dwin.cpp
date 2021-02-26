@@ -39,11 +39,11 @@ namespace ExtUI {
   void onPrintTimerStarted() { CrealityDWIN.Start_Print(isPrintingFromMedia()); }
   void onPrintTimerPaused() {}
   void onPrintTimerStopped() { CrealityDWIN.Stop_Print(); }
-  void onFilamentRunout(const extruder_t extruder) { CrealityDWIN.Popup_Handler(Runout); }
+  void onFilamentRunout(const extruder_t extruder) {}
   void onUserConfirmRequired(const char * const msg) { CrealityDWIN.Confirm_Handler(msg); }
   void onStatusChanged(const char * const msg) { CrealityDWIN.Update_Status(msg); }
 
-  void onHomingStart() { CrealityDWIN.Popup_Handler(Home); }
+  void onHomingStart() {}
   void onHomingComplete() {}
   void onPrintFinished() {}
 
@@ -58,7 +58,7 @@ namespace ExtUI {
   void onConfigurationStoreRead(bool success) {}
 
   #if HAS_MESH
-    void onMeshLevelingStart() { CrealityDWIN.Popup_Handler(Level); }
+    void onMeshLevelingStart() {}
 
     void onMeshUpdate(const int8_t xpos, const int8_t ypos, const float zval) {
       // Called when any mesh points are updated
@@ -75,19 +75,8 @@ namespace ExtUI {
 
   #if HAS_PID_HEATING
     void onPidTuning(const result_t rst) {
-      switch (rst) {
-        case PID_BAD_EXTRUDER_NUM:
-          CrealityDWIN.Popup_Handler(PidBadExtruder);
-          break;
-        case PID_TEMP_TOO_HIGH:
-          CrealityDWIN.Popup_Handler(TempWarn, true);
-          break;
-        case PID_TUNING_TIMEOUT:
-          CrealityDWIN.Popup_Handler(PidTimeout);
-          break;
-        case PID_DONE:
-          CrealityDWIN.Popup_Handler(PidDone);
-          break;
+      if (rst == result_t::PID_TEMP_TOO_HIGH) {
+        CrealityDWIN.Popup_Handler(TempWarn, true);
       }
     }
   #endif

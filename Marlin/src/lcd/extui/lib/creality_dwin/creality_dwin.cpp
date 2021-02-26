@@ -661,6 +661,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu_Item(row, ICON_SetHome, (char*)"Auto Home");
           }
           else {
+            Popup_Handler(Home);
             gcode.process_subcommands_now_P(PSTR("G28"));
             planner.synchronize();
             Draw_Menu(Prepare, PREPARE_HOME);
@@ -671,6 +672,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu_Item(row, ICON_PrintSize, (char*)"Manual Leveling", true);
           }
           else {
+            Popup_Handler(Home);
             gcode.process_subcommands_now_P( PSTR("G28"));
             planner.synchronize();
             Draw_Menu(ManualLevel);
@@ -894,6 +896,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu_Item(row, ICON_Homing, (char*)"Home Z Axis");
           }
           else {
+            Popup_Handler(Home);
             gcode.process_subcommands_now_P( PSTR("G28 Z\nG1 Z0"));
             planner.synchronize();
             Draw_Menu(ZOffset);
@@ -908,6 +911,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             if (!liveadjust) {
+              Popup_Handler(Home);
               gcode.process_subcommands_now_P( PSTR("G28 Z O\nG1 Z0"));
               planner.synchronize();
               Draw_Menu(ZOffset, 2);
@@ -1108,7 +1112,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Unload Filament");
           }
           else {
-            Popup_Handler(FilLoad, true);
+            Popup_Handler(FilLoad, true);;
             gcode.process_subcommands_now_P(PSTR("M702"));
             planner.synchronize();
             Draw_Menu(ChangeFilament, CHANGEFIL_UNLOAD);
@@ -2403,18 +2407,6 @@ void CrealityDWINClass::Popup_Handler(uint8_t popupid, bool option/*=false*/) {
     case TempWarn:
       Draw_Popup(option ? (char*)"Nozzle temp too low!" : (char*)"Nozzle temp too high!", (char*)"", (char*)"", Wait, option ? ICON_TempTooLow : ICON_TempTooHigh);
       break;
-    case Runout:
-      Draw_Popup((char*)"Filament Runout", (char*)"", (char*)"", Wait, ICON_BLTouch);
-      break;
-    case PidBadExtruder:
-      Draw_Popup((char*)"PID Autotune failed", (char*)"Bad extruder!", (char*)"", Confirm, ICON_BLTouch);
-      break;
-    case PidTimeout:
-      Draw_Popup((char*)"PID Autotune failed", (char*)"Timeout!", (char*)"", Confirm, ICON_BLTouch);
-      break;
-    case PidDone:
-      Draw_Popup((char*)"PID tuning done", (char*)"", (char*)"", Confirm, ICON_BLTouch);
-      break;
   }
 }
 
@@ -2468,11 +2460,13 @@ inline void CrealityDWINClass::Main_Menu_Control() {
         break;
       case 3:
         #if HAS_ONESTEP_LEVELING
+          Popup_Handler(Level);
           gcode.process_subcommands_now_P(PSTR("G28\nG29"));
           planner.synchronize();
           Popup_Handler(SaveLevel);
         #elif ENABLED(PROBE_MANUALLY)
           gridpoint = 1;
+          Popup_Handler(Home);
           gcode.process_subcommands_now_P(PSTR("G28"));
           planner.synchronize();
           Popup_Handler(MoveWait);
