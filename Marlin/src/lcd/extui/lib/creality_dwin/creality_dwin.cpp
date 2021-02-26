@@ -230,15 +230,37 @@ inline void CrealityDWINClass::Draw_Title(char *title) {
   DWIN_Draw_String(false, false, DWIN_FONT_HEAD, Color_White, Color_Bg_Blue, (DWIN_WIDTH - strlen(title) * STAT_CHR_W) / 2, 4, title);
 }
 
-inline void CrealityDWINClass::Draw_Menu_Item(uint8_t row, uint8_t icon/*=0*/, char *label, bool more/*=false*/) {
+inline void CrealityDWINClass::Draw_Menu_Item(uint8_t row, uint8_t icon/*=0*/, char *label, bool more/*=false*/, uint8_t custom_disabled_icon/*=ICON_Version*/) {
   if (label) DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, LBLX, MBASE(row) - 1, label); // Draw Label
-  if (icon) DWIN_ICON_Show(ICON, icon, 26, MBASE(row) - 3); //Draw Menu Icon
+  if (icon) {
+    if (DISABLED(CREALITY_DWIN_EXTUI_CUSTOM_ICONS) && icon >= CUSTOM_ICON_START) 
+      DWIN_ICON_Show(ICON, custom_disabled_icon, 26, MBASE(row) - 3); //Draw Fallback Menu Icon
+    else 
+      DWIN_ICON_Show(ICON, icon, 26, MBASE(row) - 3);                 //Draw Requested Menu Icon
+  }
   if (more) DWIN_ICON_Show(ICON, ICON_More, 226, MBASE(row) - 3); // Draw More Arrow
   DWIN_Draw_Line(Line_Color, 16, MBASE(row) + 33, 256, MBASE(row) + 34); // Draw Menu Line
 }
 
 inline void CrealityDWINClass::Draw_Checkbox(uint8_t row, bool value) {
-  DWIN_ICON_Show(ICON, (value ? ICON_Checkbox_T : ICON_Checkbox_F), 226, MBASE(row) - 3);
+  #if ENABLED(CREALITY_DWIN_EXTUI_CUSTOM_ICONS) // Draw appropriate checkbox icon
+    DWIN_ICON_Show(ICON, (value ? ICON_Checkbox_T : ICON_Checkbox_F), 226, MBASE(row) - 3); 
+  #else                                         // Draw a basic checkbox using rectangles and lines
+    DWIN_Draw_Rectangle(1, Color_Bg_Black, 226, MBASE(row) - 3, 226 + 20, MBASE(row) - 3 + 20);
+    DWIN_Draw_Rectangle(0, Color_White, 226, MBASE(row) - 3, 226 + 20, MBASE(row) - 3 + 20);
+    if (value) {
+      DWIN_Draw_Line(Color_White, 226, MBASE(row) - 3, 226 + 20, MBASE(row) - 3 + 20);
+      DWIN_Draw_Line(Color_White, 226, MBASE(row) - 3 + 20, 226 + 20, MBASE(row) - 3);
+    }
+    /* Alternative
+    if (!value) { // As a fallback to indicate a 'false' state... 
+      //DWIN_Draw_Rectangle(1, Color_Bg_Black, 26, MBASE(row) - 3, 26 + 20, MBASE(row) - 3 + 20);   // ... cover up the menu item icon 
+      DWIN_Draw_Line(0, 26, MBASE(row) - 3, 26 + 20, MBASE(row) - 3 + 20);                        // ... cross out the menu item icon
+      DWIN_Draw_Line(0, 26, MBASE(row) - 3 + 20, 26 + 20, MBASE(row) - 3);                        //     ---
+    } else {      // Redraw menu to get the original icon back
+      Redraw_Menu()
+    } */
+  #endif
 }
 
 inline void CrealityDWINClass::Draw_Menu(uint8_t menu, uint8_t select/*=0*/, uint8_t scroll/*=0*/) {
