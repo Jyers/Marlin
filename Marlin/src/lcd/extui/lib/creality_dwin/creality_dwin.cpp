@@ -44,6 +44,10 @@
   #include "../../feature/pause.h"
 #endif
 
+#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  #include "../../feature/runout.h"
+#endif
+
 #if ENABLED(HOST_ACTION_COMMANDS)
   #include "../../feature/host_actions.h"
 #endif
@@ -1945,13 +1949,12 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           break;
         case ADVANCED_FILSENSORDISTANCE:
-          float distance = ExtUI::getFilamentRunoutDistance_mm();
           if (draw) {
             Draw_Menu_Item(row, ICON_MaxAccE, (char*)"Runout Distance");
-            Draw_Float(distance, row, false, 10);
+            Draw_Float(runout.runout_distance(), row, false, 10);
           }
           else {
-            Setup_Value(distance, 0, 999, 10, 5);
+            Modify_Value(runout.runout_distance(), 0, 999, 10);
           }
           break;
         #endif
@@ -2545,9 +2548,6 @@ inline void CrealityDWINClass::Value_Control() {
       case 2: *(uint16_t*)valuepointer = tempvalue/valueunit; break;
       case 3: *(int16_t*)valuepointer = tempvalue/valueunit; break;
       case 4: *(uint32_t*)valuepointer = tempvalue/valueunit; break;
-      #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-        case 5: ExtUI::setFilamentRunoutDistance_mm(tempvalue/valueunit); break;
-      #endif
     }
     process = Menu;
     EncoderRate.enabled = false;
