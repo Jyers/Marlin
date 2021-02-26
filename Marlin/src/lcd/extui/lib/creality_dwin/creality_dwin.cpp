@@ -177,6 +177,26 @@ CrealityDWINClass CrealityDWIN;
     bool mesh_goto_zhop = true;
     uint8_t mesh_x = 0;
     uint8_t mesh_y = 0;
+
+    void manual_move() {
+      CrealityDWIN.Popup_Handler(MoveWait);
+      char buf[20];
+      sprintf(buf, "G0 Z%.3f", (!goto_mesh_value ? Z_CLEARANCE_BETWEEN_PROBES : (mesh_goto_zhop ? 1. : 0.)));
+      gcode.process_subcommands_now_P(buf);
+      sprintf(buf, "G42 I%i J%i", mesh_x, mesh_y);
+      gcode.process_subcommands_now_P(buf);
+      sprintf(buf, "G0 Z%.3f", goto_mesh_value ? .0 : Z_CLEARANCE_BETWEEN_PROBES);
+      gcode.process_subcommands_now_P(buf);
+      planner.synchronize();
+      CrealityDWIN.Redraw_Menu();
+    }
+
+    void manual_value_update(bool undefined=false) {
+      char buf[32];
+      sprintf(buf, "M421 I%i J%i Z%.3f %s", mesh_x, mesh_y, current_position.z, undefined ? "N" : "");
+      gcode.process_subcommands_now_P(buf);
+      planner.synchronize();
+    }
   };
   UBL_Settings ubl_conf = UBL_Settings();
 #endif
@@ -303,7 +323,7 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
 }
 
 #if ENABLED(AUTO_BED_LEVELING_UBL)
-  void CrealityDWINClass::Draw_Bed_Mesh(int16_t selected, uint8_t gridline_width, uint16_t padding_x, uint16_t padding_y_top) {
+  void CrealityDWINClass::Draw_Bed_Mesh(int16_t selected/*=-1*/, uint8_t gridline_width/*=1*/, uint16_t padding_x/*=8*/, uint16_t padding_y_top/*=40 + 53 - 7*/) {
     const uint16_t square = DWIN_WIDTH - padding_x - padding_x;
     const uint16_t cell_width_px  = square / GRID_MAX_POINTS_X;
     const uint16_t cell_height_px = square / GRID_MAX_POINTS_Y;
@@ -372,34 +392,6 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
     }
     Update_Status(msg);
   }
-
-  void ubl_manual_move() {
-    CrealityDWIN.Popup_Handler(MoveWait);
-    char buf[20];
-    sprintf(buf, "G0 Z%.3f", (!ubl_conf.goto_mesh_value ? Z_CLEARANCE_BETWEEN_PROBES : (ubl_conf.mesh_goto_zhop ? 1. : 0.)));
-    gcode.process_subcommands_now_P(buf);
-    sprintf(buf, "G42 I%i J%i", ubl_conf.mesh_x, ubl_conf.mesh_y);
-    gcode.process_subcommands_now_P(buf);
-    sprintf(buf, "G0 Z%.3f", ubl_conf.goto_mesh_value ? .0 : Z_CLEARANCE_BETWEEN_PROBES);
-    gcode.process_subcommands_now_P(buf);
-    planner.synchronize();
-    CrealityDWIN.Redraw_Menu();
-  }
-
-  void ubl_manual_update_value(bool undefined=false) {
-    char buf[32];
-    sprintf(buf, "M421 I%i J%i Z%.3f %s", ubl_conf.mesh_x, ubl_conf.mesh_y, current_position.z, undefined ? "N" : "");
-    gcode.process_subcommands_now_P(buf);
-    planner.synchronize();
-  }
-
-  void ubl_manual_title_zvalue() {
-    char buf[16];
-    sprintf(buf, "Z value: %.3f", ubl.z_values[ubl_conf.mesh_x][ubl_conf.mesh_y]);
-    CrealityDWIN.Clear_Screen(1);
-    CrealityDWIN.Draw_Title(buf);
-  }
-
 #endif // AUTO_BED_LEVELING_UBL
 
 
@@ -2303,7 +2295,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 gcode.home_all_axes(true);
               }
               ubl_conf.mesh_step_warning = false;
-              ubl_manual_move();
+              ubl_conf.manual_move();
               Draw_Menu(UBLManual);
             }
             break;
@@ -2453,7 +2445,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                     ubl_conf.mesh_x = 0;
                     ubl_conf.mesh_y++;
                   }
-                  ubl_manual_move();
+                  ubl_conf.manual_move();
                 } else {
                   gcode.process_subcommands_now_P(PSTR("G29 S0"));
                   planner.synchronize();
@@ -2521,7 +2513,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 }
               }
               ubl_conf.goto_mesh_value = !ubl_conf.goto_mesh_value;
-              ubl_manual_move();
+              ubl_conf.manual_move();
             }
             break;
           case UBLM_GOTO_ZHOP:
@@ -2539,7 +2531,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             if (draw) {
               Draw_Menu_Item(row, ICON_ResumeEEPROM, (char*)"Clear point value");
             } else {
-              ubl_manual_update_value(true);
+              ubl_conf.manual_value_update(true);
               Redraw_Menu();
             }
             break;
@@ -3153,7 +3145,7 @@ inline void CrealityDWINClass::Value_Control() {
       #endif
       #if ENABLED(AUTO_BED_LEVELING_UBL)
       case UBLManual:
-        ubl_manual_move();
+        ubl_conf.manual_move();
         break;
       #endif
     }
