@@ -394,15 +394,25 @@ void CrealityDWINClass::Draw_Print_ProgressBar() {
 void CrealityDWINClass::Draw_Print_ProgressRemain() {
   uint16_t remainingtime = ui.get_remaining_time();
   DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 176, 187, remainingtime / 3600);
-  DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 192, 187, (char*)":");
   DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 200, 187, (remainingtime % 3600) / 60);
+  if (eeprom_settings.time_format_textual) {
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 192, 187, (char*)"h");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 216, 187, (char*)"m");
+  } else {
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 192, 187, (char*)":");
+  }
 }
 
 void CrealityDWINClass::Draw_Print_ProgressElapsed() {
   duration_t elapsed = print_job_timer.duration();
   DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 42, 187, elapsed.value / 3600);
-  DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 58, 187, (char*)":");
   DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 66, 187, (elapsed.value % 3600) / 60);
+  if (eeprom_settings.time_format_textual) {
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 58, 187, (char*)"h");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 82, 187, (char*)"m");
+  } else {
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 58, 187, (char*)":");
+  }
 }
 
 void CrealityDWINClass::Draw_Print_confirm() {
@@ -1248,31 +1258,31 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           break;
         #if ENABLED(EEPROM_SETTINGS)
-        case CONTROL_SAVE:
-          if (draw) {
-            Draw_Menu_Item(row, ICON_WriteEEPROM, (char*)"Store Settings");
-          }
-          else {
-            AudioFeedback(settings.save());
-          }
-          break;
-        case CONTROL_RESTORE:
-          if (draw) {
-            Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Restore Settings");
-          }
-          else {
-            AudioFeedback(settings.load());
-          }
-          break;
-        case CONTROL_RESET:
-          if (draw) {
-            Draw_Menu_Item(row, ICON_Temperature, (char*)"Reset to Defaults");
-          }
-          else {
-            settings.reset();
-            AudioFeedback();
-          }
-          break;
+          case CONTROL_SAVE:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_WriteEEPROM, (char*)"Store Settings");
+            }
+            else {
+              AudioFeedback(settings.save());
+            }
+            break;
+          case CONTROL_RESTORE:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Restore Settings");
+            }
+            else {
+              AudioFeedback(settings.load());
+            }
+            break;
+          case CONTROL_RESET:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Temperature, (char*)"Reset to Defaults");
+            }
+            else {
+              settings.reset();
+              AudioFeedback();
+            }
+            break;
         #endif
         case CONTROL_INFO:
           if (draw) {
@@ -1970,7 +1980,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define ADVANCED_UNLOAD (ADVANCED_LOAD + ENABLED(ADVANCED_PAUSE_FEATURE))
       #define ADVANCED_COLD_EXTRUDE  (ADVANCED_UNLOAD + ENABLED(PREVENT_COLD_EXTRUSION))
       #define ADVANCED_POWER_LOSS (ADVANCED_COLD_EXTRUDE + ENABLED(POWER_LOSS_RECOVERY))
-      #define ADVANCED_TOTAL ADVANCED_POWER_LOSS
+      #define ADVANCED_TIME_FORMAT (ADVANCED_POWER_LOSS + 1)
+      #define ADVANCED_TOTAL ADVANCED_TIME_FORMAT
 
       switch (item) {
         case ADVANCED_BACK:
@@ -2045,6 +2056,15 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             }
             break;
         #endif
+        case ADVANCED_TIME_FORMAT:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_PrintTime, (char*)"Progress as __h__m");
+            Draw_Checkbox(row, eeprom_settings.time_format_textual);
+          } else {
+            eeprom_settings.time_format_textual = !eeprom_settings.time_format_textual;
+            Draw_Checkbox(row, eeprom_settings.time_format_textual);
+          }
+          break;
       }
       break;
     case InfoMain:
