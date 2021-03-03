@@ -171,19 +171,17 @@ enum menuID : uint8_t {
 
 // Custom icons
 #if ENABLED(CREALITY_DWIN_EXTUI_CUSTOM_ICONS)
-  #define CUSTOM_ICON_START         ICON_Checkbox_F
+  // index of every custom icon should be >= CUSTOM_ICON_START
+  #define CUSTOM_ICON_START         ICON_Checkbox_F 
   #define ICON_Checkbox_F           200
   #define ICON_Checkbox_T           201
   #define ICON_Fade                 202
   #define ICON_Mesh                 203
   #define ICON_Tilt                 204
 #else
-  #define CUSTOM_ICON_START         ICON_Checkbox_F
-  #define ICON_Checkbox_F           35
-  #define ICON_Checkbox_T           36
-  #define ICON_Fade                 37
-  #define ICON_Mesh                 38
-  #define ICON_Tilt                 39
+  #define ICON_Fade                 ICON_Version
+  #define ICON_Mesh                 ICON_Version
+  #define ICON_Tilt                 ICON_Version
 #endif
 
 
