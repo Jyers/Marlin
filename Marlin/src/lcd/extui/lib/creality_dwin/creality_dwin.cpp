@@ -553,7 +553,7 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
       DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 3, 2, 205, 459, z * 100);
     } else {
       DWIN_Draw_String(false, true, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 205, 459, (char*)"-");
-      DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 2, 205, 459, -z * 100);
+      DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 2, 205, 459, z * 100);
     }
   }
   DWIN_UpdateLCD();
@@ -698,12 +698,6 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           else {
             Popup_Handler(Home);
             gcode.process_subcommands_now_P(PSTR("G28"));
-            #if ENABLED(Z_SAFE_HOMING)
-              planner.synchronize();
-              char buf[20];
-              sprintf(buf, "G0 X%i Y%i", Z_SAFE_HOMING_X_POINT, Z_SAFE_HOMING_Y_POINT);
-              gcode.process_subcommands_now_P(buf);
-            #endif
             planner.synchronize();
             Draw_Menu(Prepare, PREPARE_HOME);
           }
@@ -961,9 +955,16 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(Home);
-            gcode.process_subcommands_now_P( PSTR("G28 Z\nG1 Z0"));
+            gcode.process_subcommands_now_P( PSTR("G28 Z"));
+            #if ENABLED(Z_SAFE_HOMING)
+              planner.synchronize();
+              char buf[20];
+              sprintf(buf, "G0 X%i Y%i", Z_SAFE_HOMING_X_POINT, Z_SAFE_HOMING_Y_POINT);
+              gcode.process_subcommands_now_P(buf);
+            #endif
+            gcode.process_subcommands_now_P( PSTR("G0 Z0"));
             planner.synchronize();
-            Draw_Menu(ZOffset);
+            Redraw_Menu();
           }
           break;
         case ZOFFSET_MODE:
@@ -976,12 +977,11 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           else {
             if (!liveadjust) {
               Popup_Handler(Home);
-              gcode.process_subcommands_now_P( PSTR("G28 Z O\nG1 Z0"));
+              gcode.process_subcommands_now_P( PSTR("G28\nG0 Z0"));
               planner.synchronize();
-              Draw_Menu(ZOffset, 2);
             }
             liveadjust = !liveadjust;
-            Draw_Menu(ZOffset, 2);
+            Redraw_Menu();
           }
           break;
         case ZOFFSET_OFFSET:
@@ -1996,48 +1996,48 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
         #endif
         #if ENABLED(ADVANCED_PAUSE_FEATURE)
-          case ADVANCED_LOAD:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_WriteEEPROM, (char*)"Load Length");
-              Draw_Float(fc_settings[0].load_length, row, false, 1);
-            }
-            else {
-              Modify_Value(fc_settings[0].load_length, 0, EXTRUDE_MAXLENGTH, 1);
-            }
-            break;
-          case ADVANCED_UNLOAD:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Unload Length");
-              Draw_Float(fc_settings[0].unload_length, row, false, 1);
-            }
-            else {
-              Modify_Value(fc_settings[0].unload_length, 0, EXTRUDE_MAXLENGTH, 1);
-            }
-            break;
+        case ADVANCED_LOAD:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_WriteEEPROM, (char*)"Load Length");
+            Draw_Float(fc_settings[0].load_length, row, false, 1);
+          }
+          else {
+            Modify_Value(fc_settings[0].load_length, 0, EXTRUDE_MAXLENGTH, 1);
+          }
+          break;
+        case ADVANCED_UNLOAD:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Unload Length");
+            Draw_Float(fc_settings[0].unload_length, row, false, 1);
+          }
+          else {
+            Modify_Value(fc_settings[0].unload_length, 0, EXTRUDE_MAXLENGTH, 1);
+          }
+          break;
         #endif
         #if ENABLED(PREVENT_COLD_EXTRUSION)
-          case ADVANCED_COLD_EXTRUDE:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_Cool, (char*)"Min extrusion T");
-              Draw_Float(thermalManager.extrude_min_temp, row, false, 1);
-            }
-            else {
-              Modify_Value(thermalManager.extrude_min_temp, 0, MAX_E_TEMP, 1);
-              thermalManager.allow_cold_extrude = (thermalManager.extrude_min_temp == 0);
-            }
-            break;
+        case ADVANCED_COLD_EXTRUDE:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_Cool, (char*)"Min extrusion T");
+            Draw_Float(thermalManager.extrude_min_temp, row, false, 1);
+          }
+          else {
+            Modify_Value(thermalManager.extrude_min_temp, 0, MAX_E_TEMP, 1);
+            thermalManager.allow_cold_extrude = (thermalManager.extrude_min_temp == 0);
+          }
+          break;
         #endif
         #if ENABLED(POWER_LOSS_RECOVERY)
-          case ADVANCED_POWER_LOSS:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_Motion, (char*)"Power-loss recovery");
-              Draw_Checkbox(row, recovery.enabled);
-            }
-            else {
-              recovery.enable(!recovery.enabled);
-              Draw_Checkbox(row, recovery.enabled);
-            }
-            break;
+        case ADVANCED_POWER_LOSS:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_Motion, (char*)"Power-loss recovery");
+            Draw_Checkbox(row, recovery.enabled);
+          }
+          else {
+            recovery.enable(!recovery.enabled);
+            Draw_Checkbox(row, recovery.enabled);
+          }
+          break;
         #endif
       }
       break;
@@ -2045,6 +2045,11 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
     case Info:
 
       #define INFO_BACK 0
+      #define INFO_PRINTCOUNT (INFO_BACK + ENABLED(PRINTCOUNTER))
+      #define INFO_PRINTTIME (INFO_PRINTCOUNT + ENABLED(PRINTCOUNTER))
+      #define INFO_SIZE (INFO_PRINTTIME + 1)
+      #define INFO_VERSION (INFO_SIZE + 1)
+      #define INFO_CONTACT (INFO_VERSION + 1)
       #define INFO_TOTAL INFO_BACK
 
       switch (item) {
@@ -2052,25 +2057,24 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           if (draw) {
             Draw_Menu_Item(row, ICON_Back, (char*)"Back");
             
-            #define INFO_OFFSET (ENABLED(PRINTCOUNTER) * 2)
             #if ENABLED(PRINTCOUNTER)
               char row1[32], row2[32], buf[32];
               printStatistics ps = print_job_timer.getStats();
 
               sprintf(row1, "%i prints, %i finished", ps.totalPrints, ps.finishedPrints);
               sprintf(row2, "%.2f m filament used", ps.filamentUsed / 1000);
-              Draw_Menu_Item(1, ICON_HotendTemp, row1, row2, false, true);
+              Draw_Menu_Item(INFO_PRINTCOUNT, ICON_HotendTemp, row1, row2, false, true);
 
               ExtUI::getTotalPrintTime_str(buf);
               sprintf(row1, "Printed: %s", buf);
               ExtUI::getLongestPrint_str(buf);
               sprintf(row2, "Longest: %s", buf);
-              Draw_Menu_Item(2, ICON_PrintTime, row1, row2, false, true);
+              Draw_Menu_Item(INFO_PRINTTIME, ICON_PrintTime, row1, row2, false, true);
             #endif
             
-            Draw_Menu_Item(3, ICON_PrintSize, (char*)MACHINE_SIZE, NULL, false, true);
-            Draw_Menu_Item(4, ICON_Version, (char*)SHORT_BUILD_VERSION, (char*)"Build Number: v" BUILD_NUMBER, false, true);
-            Draw_Menu_Item(5, ICON_Contact, (char*)CORP_WEBSITE_E, NULL, false, true);
+            Draw_Menu_Item(INFO_SIZE, ICON_PrintSize, (char*)MACHINE_SIZE, NULL, false, true);
+            Draw_Menu_Item(INFO_VERSION, ICON_Version, (char*)SHORT_BUILD_VERSION, (char*)"Build Number: v" BUILD_NUMBER, false, true);
+            Draw_Menu_Item(INFO_CONTACT, ICON_Contact, (char*)CORP_WEBSITE_E, NULL, false, true);
           }
           else {
             if (menu == Info)
@@ -2359,8 +2363,8 @@ char* CrealityDWINClass::Get_Menu_Title(uint8_t menu) {
     case InfoMain:
       return (char*)"Info";
     #if ENABLED(PROBE_MANUALLY)
-      case ManualMesh:
-        return (char*)"Mesh Bed Leveling";
+    case ManualMesh:
+      return (char*)"Mesh Bed Leveling";
     #endif
     case Tune:
       return (char*)"Tune";
@@ -2431,8 +2435,8 @@ int CrealityDWINClass::Get_Menu_Size(uint8_t menu) {
     case InfoMain:
       return INFO_TOTAL;
     #if ENABLED(PROBE_MANUALLY)
-      case ManualMesh:
-        return MMESH_TOTAL;
+    case ManualMesh:
+      return MMESH_TOTAL;
     #endif
     case Tune:
       return TUNE_TOTAL;
@@ -2591,9 +2595,9 @@ inline void CrealityDWINClass::Value_Control() {
   }
   else if (encoder_diffState == ENCODER_DIFF_ENTER) {
     if ((active_menu == ZOffset && liveadjust) || (active_menu == Tune && selection == 6/*ZOffset*/)) {
+      planner.synchronize();
       float pos = current_position.z;
       current_position.z += (tempvalue/valueunit - zoffsetvalue);
-      planner.synchronize();
       planner.buffer_line(current_position, homing_feedrate(Z_AXIS), active_extruder);
       current_position.z = pos;
       sync_plan_position();
