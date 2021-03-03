@@ -170,12 +170,21 @@ enum menuID : uint8_t {
 #define ICON_Info_1               91
 
 // Custom icons
-#define CUSTOM_ICON_START         ICON_Checkbox_F
-#define ICON_Checkbox_F           200
-#define ICON_Checkbox_T           201
-#define ICON_Fade                 202
-#define ICON_Mesh                 203
-#define ICON_Tilt                 204
+#if ENABLED(CREALITY_DWIN_EXTUI_CUSTOM_ICONS)
+  #define CUSTOM_ICON_START         ICON_Checkbox_F
+  #define ICON_Checkbox_F           200
+  #define ICON_Checkbox_T           201
+  #define ICON_Fade                 202
+  #define ICON_Mesh                 203
+  #define ICON_Tilt                 204
+#else
+  #define CUSTOM_ICON_START         ICON_Checkbox_F
+  #define ICON_Checkbox_F           35
+  #define ICON_Checkbox_T           36
+  #define ICON_Fade                 37
+  #define ICON_Mesh                 38
+  #define ICON_Tilt                 39
+#endif
 
 
 #define font6x12  0x00
@@ -213,8 +222,7 @@ public:
   inline void Draw_Float(float value, uint8_t row, bool selected=false, uint8_t minunit=10);
   inline void Draw_Checkbox(uint8_t row, bool value);
   inline void Draw_Title(char* title);
-  inline void Draw_Menu_Item(uint8_t row, uint8_t icon=0, char * const label1=NULL, char * const label2=NULL, 
-    bool more=false, bool centered=false, uint8_t custom_disabled_icon=ICON_Version);
+  inline void Draw_Menu_Item(uint8_t row, uint8_t icon=0, char * const label1=NULL, char * const label2=NULL, bool more=false, bool centered=false);
   inline void Draw_Menu(uint8_t menu, uint8_t select=0, uint8_t scroll=0);
   inline void Redraw_Menu();
 

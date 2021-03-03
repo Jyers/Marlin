@@ -200,19 +200,13 @@ inline void CrealityDWINClass::Draw_Title(char *title) {
   DWIN_Draw_String(false, false, DWIN_FONT_HEAD, Color_White, Color_Bg_Blue, (DWIN_WIDTH - strlen(title) * STAT_CHR_W) / 2, 4, title);
 }
 
-inline void CrealityDWINClass::Draw_Menu_Item(uint8_t row, uint8_t icon/*=0*/, char *label1, char *label2, bool more/*=false*/, bool centered/*=false*/, uint8_t custom_disabled_icon/*=ICON_Version*/) {
+inline void CrealityDWINClass::Draw_Menu_Item(uint8_t row, uint8_t icon/*=0*/, char *label1, char *label2, bool more/*=false*/, bool centered/*=false*/) {
   const uint8_t label_offset_y = !(label1 && label2) ? 0 : MENU_CHR_H * 3 / 5;
   const uint8_t label1_offset_x = !centered ? LBLX : LBLX * 4/5 + max(LBLX * 1U/5, (DWIN_WIDTH - LBLX - strlen(label1) * MENU_CHR_W) / 2);
   const uint8_t label2_offset_x = !centered ? LBLX : LBLX * 4/5 + max(LBLX * 1U/5, (DWIN_WIDTH - LBLX - strlen(label2) * MENU_CHR_W) / 2);
   if (label1) DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, label1_offset_x, MBASE(row) - 1 - label_offset_y, label1); // Draw Label
   if (label2) DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, label2_offset_x, MBASE(row) - 1 + label_offset_y, label2); // Draw Label
-  
-  if (icon) {
-    if (DISABLED(CREALITY_DWIN_EXTUI_CUSTOM_ICONS) && icon >= CUSTOM_ICON_START) 
-      DWIN_ICON_Show(ICON, custom_disabled_icon, 26, MBASE(row) - 3); //Draw Fallback Menu Icon
-    else 
-      DWIN_ICON_Show(ICON, icon, 26, MBASE(row) - 3);                 //Draw Requested Menu Icon
-  }
+  if (icon) DWIN_ICON_Show(ICON, icon, 26, MBASE(row) - 3);   //Draw Menu Icon
   if (more) DWIN_ICON_Show(ICON, ICON_More, 226, MBASE(row) - 3); // Draw More Arrow
   DWIN_Draw_Line(Line_Color, 16, MBASE(row) + 33, 256, MBASE(row) + 34); // Draw Menu Line
 }
@@ -559,7 +553,7 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
       DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 3, 2, 205, 459, z * 100);
     } else {
       DWIN_Draw_String(false, true, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 205, 459, (char*)"-");
-      DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 2, 205, 459, z * 100);
+      DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 2, 205, 459, -z * 100);
     }
   }
   DWIN_UpdateLCD();
