@@ -209,6 +209,7 @@ enum menuID : uint8_t {
 #define Percent_Color     0xFE29  // Percentage color
 #define BarFill_Color     0x10E4  // Fill color of progress bar
 #define Select_Color      0x33BB  // Selected color
+#define Check_Color       0x4E5C  // Check-box check color
 
 extern millis_t dwin_heat_time;
 
