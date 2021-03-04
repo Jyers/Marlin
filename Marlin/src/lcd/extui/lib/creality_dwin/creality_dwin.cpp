@@ -141,7 +141,6 @@ constexpr float default_steps[]               = DEFAULT_AXIS_STEPS_PER_UNIT;
 #endif
 
 uint8_t active_menu = MainMenu;
-uint8_t last_menu = MainMenu;
 uint8_t selection = 0;
 uint8_t scrollpos = 0;
 uint8_t process = Main;
@@ -707,7 +706,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Popup_Handler(Home);
             gcode.process_subcommands_now_P(PSTR("G28"));
             planner.synchronize();
-            Draw_Menu(Prepare, PREPARE_HOME);
+            Redraw_Menu();
           }
           break;
         case PREPARE_MANUALLEVEL:
@@ -766,7 +765,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 Popup_Handler(FilChange);
                 gcode.process_subcommands_now_P(PSTR("M600 B1"));
                 planner.synchronize();
-                Draw_Menu(Prepare, PREPARE_CHANGEFIL);
+                Redraw_Menu();
               #endif
             }
             break;
@@ -886,7 +885,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Popup_Handler(MoveWait);
             gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X35 Y35\nG1 F300 Z0\nM220 S100"));
             planner.synchronize();
-            Draw_Menu(ManualLevel, 1);
+            Redraw_Menu();
           }
           break;
         case MLEVEL_TL:
@@ -897,7 +896,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Popup_Handler(MoveWait);
             gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X35 Y200\nG1 F300 Z0\nM220 S100"));
             planner.synchronize();
-            Draw_Menu(ManualLevel, 2);
+            Redraw_Menu();
           }
           break;
         case MLEVEL_TR:
@@ -908,7 +907,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Popup_Handler(MoveWait);
             gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X200 Y200\nG1 F300 Z0\nM220 S100"));
             planner.synchronize();
-            Draw_Menu(ManualLevel, 3);
+            Redraw_Menu();
           }
           break;
         case MLEVEL_BR:
@@ -919,7 +918,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Popup_Handler(MoveWait);
             gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X200 Y35\nG1 F300 Z0\nM220 S100"));
             planner.synchronize();
-            Draw_Menu(ManualLevel, 4);
+            Redraw_Menu();
           }
           break;
         case MLEVEL_C:
@@ -930,7 +929,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Popup_Handler(MoveWait);
             gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X117.5 Y117.5\nG1 F300 Z0\nM220 S100"));
             planner.synchronize();
-            Draw_Menu(ManualLevel, 5);
+            Redraw_Menu();
           }
           break;
       }
@@ -977,10 +976,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
           case ZOFFSET_MODE:
             if (draw) {
-              if (liveadjust)
-                Draw_Menu_Item(row, ICON_Zoffset, (char*)"Live Adjust: Enabled");
-              else
-                Draw_Menu_Item(row, ICON_Zoffset, (char*)"Live Adjust: Disabled");
+              Draw_Menu_Item(row, ICON_Zoffset, (char*)"Live Adjustment");
+              Draw_Checkbox(row, liveadjust);
             }
             else {
               if (!liveadjust) {
@@ -989,7 +986,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 planner.synchronize();
               }
               liveadjust = !liveadjust;
-              Redraw_Menu();
+              Draw_Checkbox(row, liveadjust);
             }
             break;
           case ZOFFSET_OFFSET:
@@ -1067,14 +1064,12 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
           case PREHEAT_MODE:
             if (draw) {
-              if (bedonly)
-                Draw_Menu_Item(row, ICON_Homing, (char*)"Preheat Mode: Bed");
-              else
-                Draw_Menu_Item(row, ICON_Homing, (char*)"Preheat Mode: Normal");
+              Draw_Menu_Item(row, ICON_Homing, (char*)"Bed Only Mode");
+              Draw_Checkbox(row, bedonly);
             }
             else {
               bedonly = !bedonly;
-              Draw_Menu(Preheat, 1);
+              Draw_Checkbox(row, bedonly);
             }
             break;
           #if (PREHEAT_COUNT >= 1)
@@ -1176,7 +1171,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Popup_Handler(FilLoad);
               gcode.process_subcommands_now_P(PSTR("M701"));
               planner.synchronize();
-              Draw_Menu(ChangeFilament, CHANGEFIL_LOAD);
+              Redraw_Menu();
             }
             break;
           case CHANGEFIL_UNLOAD:
@@ -1187,7 +1182,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Popup_Handler(FilLoad, true);
               gcode.process_subcommands_now_P(PSTR("M702"));
               planner.synchronize();
-              Draw_Menu(ChangeFilament, CHANGEFIL_UNLOAD);
+              Redraw_Menu();
             }
             break;
           case CHANGEFIL_CHANGE:
@@ -1198,7 +1193,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Popup_Handler(FilChange);
               gcode.process_subcommands_now_P(PSTR("M600 B1"));
               planner.synchronize();
-              Draw_Menu(ChangeFilament, CHANGEFIL_CHANGE);
+              Redraw_Menu();
             }
             break;
         }
@@ -2040,16 +2035,12 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #if ENABLED(FILAMENT_RUNOUT_SENSOR)
           case ADVANCED_FILSENSORENABLED:
             if (draw) {
-              if (ExtUI::getFilamentRunoutEnabled()) {
-                Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor: Enabled");
-              }
-              else {
-                Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor: Disabled");
-              }
+              Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor");
+              Draw_Checkbox(ExtUI::getFilamentRunoutEnabled());
             }
             else {
               ExtUI::setFilamentRunoutEnabled(!ExtUI::getFilamentRunoutEnabled());
-              Draw_Menu(Advanced, ADVANCED_FILSENSORENABLED);
+              Draw_Checkbox(ExtUI::getFilamentRunoutEnabled());
             }
             break;
           #if ENABLED(FILAMENT_RUNOUT_DISTANCE)
@@ -2156,7 +2147,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 gcode.process_subcommands_now_P(PSTR("G29"));
                 planner.synchronize();
                 gridpoint++;
-                Draw_Menu(ManualMesh, 1);
+                Redraw_Menu();
               }
               else {
                 gcode.process_subcommands_now_P(PSTR("G29"));
@@ -2327,23 +2318,19 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Popup_Handler(FilChange);
               gcode.process_subcommands_now_P(PSTR("M600 B1"));
               planner.synchronize();
-              Draw_Menu(Tune, TUNE_CHANGEFIL);
+              Redraw_Menu();
             }
             break;
         #endif
         #if ENABLED(FILAMENT_RUNOUT_SENSOR)
           case TUNE_FILSENSORENABLED:
             if (draw) {
-              if (ExtUI::getFilamentRunoutEnabled()) {
-                Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor: Enabled");
-              }
-              else {
-                Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor: Disabled");
-              }
+              Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor");
+              Draw_Checkbox(ExtUI::getFilamentRunoutEnabled());
             }
             else {
               ExtUI::setFilamentRunoutEnabled(!ExtUI::getFilamentRunoutEnabled());
-              Draw_Menu(Tune, TUNE_FILSENSORENABLED);
+              Draw_Checkbox(ExtUI::getFilamentRunoutEnabled());
             }
             break;
         #endif
@@ -2552,7 +2539,6 @@ void CrealityDWINClass::Popup_Handler(uint8_t popupid, bool option/*=false*/) {
 }
 
 void CrealityDWINClass::Confirm_Handler(const char * const msg) {
-  last_menu = active_menu;
   if (process != Confirm) last_process = process;
   popup = UI;
   if (strcmp_P(msg, GET_TEXT(MSG_FILAMENT_CHANGE_INSERT)) == 0) {
@@ -2922,20 +2908,14 @@ inline void CrealityDWINClass::Popup_Control() {
       case ETemp:
         if (selection==0) {
           thermalManager.temp_hotend[0].target = 200;
-          Draw_Menu(Move, 4);
         }
-        else {
-          Draw_Menu(Move, 4);
-        }
+        Redraw_Menu();
         break;
       case SaveLevel:
         if (selection==0) {
           AudioFeedback(settings.save());
-          Draw_Main_Menu();
         }
-        else {
-          Draw_Main_Menu();
-        }
+        Draw_Main_Menu();
         break;
     }
   DWIN_UpdateLCD();
