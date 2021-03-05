@@ -146,6 +146,7 @@ uint8_t scrollpos = 0;
 uint8_t process = Main;
 uint8_t last_process = Main;
 uint8_t popup;
+uint8_t last_popup;
 
 void *valuepointer;
 float tempvalue;
@@ -715,7 +716,10 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(Home);
-            gcode.process_subcommands_now_P( PSTR("G28"));
+            gcode.process_subcommands_now_P(PSTR("G28"));
+            #if ANY(HAS_ONESTEP_LEVELING, PROBE_MANUALLY)
+              gcode.process_subcommands_now_P(PSTR("G420 S0"));
+            #endif
             planner.synchronize();
             Draw_Menu(ManualLevel);
           }
@@ -874,6 +878,9 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu_Item(row, ICON_Back, (char*)"Back");
           }
           else {
+            #if ANY(HAS_ONESTEP_LEVELING, PROBE_MANUALLY)
+              gcode.process_subcommands_now_P(PSTR("G420 S1"));
+            #endif
             Draw_Menu(Prepare, PREPARE_MANUALLEVEL);
           }
           break;
@@ -1967,7 +1974,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define ADVANCED_UNLOAD (ADVANCED_LOAD + ENABLED(ADVANCED_PAUSE_FEATURE))
       #define ADVANCED_COLD_EXTRUDE  (ADVANCED_UNLOAD + ENABLED(PREVENT_COLD_EXTRUSION))
       #define ADVANCED_FILSENSORENABLED (ADVANCED_COLD_EXTRUDE + ENABLED(FILAMENT_RUNOUT_SENSOR))
-      #define ADVANCED_FILSENSORDISTANCE (ADVANCED_FILSENSORENABLED + ENABLED(FILAMENT_RUNOUT_DISTANCE))
+      #define ADVANCED_FILSENSORDISTANCE (ADVANCED_FILSENSORENABLED + ENABLED(HAS_FILAMENT_RUNOUT_DISTANCE))
       #define ADVANCED_POWER_LOSS (ADVANCED_FILSENSORDISTANCE + ENABLED(POWER_LOSS_RECOVERY))
       #define ADVANCED_TOTAL ADVANCED_POWER_LOSS
 
@@ -2043,7 +2050,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Draw_Checkbox(ExtUI::getFilamentRunoutEnabled());
             }
             break;
-          #if ENABLED(FILAMENT_RUNOUT_DISTANCE)
+          #if ENABLED(HAS_FILAMENT_RUNOUT_DISTANCE)
             case ADVANCED_FILSENSORDISTANCE:
               if (draw) {
                 Draw_Menu_Item(row, ICON_MaxAccE, (char*)"Runout Distance");
@@ -2488,7 +2495,7 @@ int CrealityDWINClass::Get_Menu_Size(uint8_t menu) {
 /* Popup Config */
 
 void CrealityDWINClass::Popup_Handler(uint8_t popupid, bool option/*=false*/) {
-  popup = popupid;
+  popup = last_popup = popupid;
   switch (popupid) {
     case Pause:
       Draw_Popup((char*)"Pause Print", (char*)"", (char*)"", Popup);
@@ -2944,7 +2951,10 @@ inline void CrealityDWINClass::Confirm_Control() {
             Draw_SD_List();
             break;
           case Wait:
-            Popup_Handler(FilLoad);
+            if (last_popup == Runout)
+              Draw_Print_Screen();
+            else
+              Popup_Handler(last_popup);
             break;
         }
         wait_for_user = false;
