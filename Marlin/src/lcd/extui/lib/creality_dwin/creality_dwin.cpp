@@ -2043,11 +2043,11 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           case ADVANCED_FILSENSORENABLED:
             if (draw) {
               Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor");
-              Draw_Checkbox(ExtUI::getFilamentRunoutEnabled());
+              Draw_Checkbox(row, ExtUI::getFilamentRunoutEnabled());
             }
             else {
               ExtUI::setFilamentRunoutEnabled(!ExtUI::getFilamentRunoutEnabled());
-              Draw_Checkbox(ExtUI::getFilamentRunoutEnabled());
+              Draw_Checkbox(row, ExtUI::getFilamentRunoutEnabled());
             }
             break;
           #if ENABLED(HAS_FILAMENT_RUNOUT_DISTANCE)
@@ -2333,11 +2333,11 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           case TUNE_FILSENSORENABLED:
             if (draw) {
               Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor");
-              Draw_Checkbox(ExtUI::getFilamentRunoutEnabled());
+              Draw_Checkbox(row, ExtUI::getFilamentRunoutEnabled());
             }
             else {
               ExtUI::setFilamentRunoutEnabled(!ExtUI::getFilamentRunoutEnabled());
-              Draw_Checkbox(ExtUI::getFilamentRunoutEnabled());
+              Draw_Checkbox(row, ExtUI::getFilamentRunoutEnabled());
             }
             break;
         #endif
