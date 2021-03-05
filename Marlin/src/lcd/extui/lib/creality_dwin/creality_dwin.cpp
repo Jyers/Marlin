@@ -890,7 +890,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X35 Y35\nG1 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X32.5 Y32.5\nG0 F300 Z0\nM220 S100"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -901,7 +901,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X35 Y200\nG1 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X32.5 Y197.5\nG0 F300 Z0\nM220 S100"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -912,7 +912,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X200 Y200\nG1 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X197.5 Y197.5\nG0 F300 Z0\nM220 S100"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -923,7 +923,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X200 Y35\nG1 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X197.5 Y32.5\nG0 F300 Z0\nM220 S100"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -934,7 +934,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G1 F4000\nG1 Z10\nG1 X117.5 Y117.5\nG1 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X117.5 Y117.5\nG0 F300 Z0\nM220 S100"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -969,14 +969,16 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             }
             else {
               Popup_Handler(Home);
-              gcode.process_subcommands_now_P( PSTR("G28 Z"));
+              gcode.process_subcommands_now_P(PSTR("G28 Z"));
               #if ENABLED(Z_SAFE_HOMING)
                 planner.synchronize();
                 char buf[20];
                 sprintf(buf, "G0 X%i Y%i", Z_SAFE_HOMING_X_POINT, Z_SAFE_HOMING_Y_POINT);
                 gcode.process_subcommands_now_P(buf);
+              #else
+                gcode.process_subcommands_now_P(PSTR("G0 X117.5 Y117.5"));
               #endif
-              gcode.process_subcommands_now_P( PSTR("G0 Z0"));
+              gcode.process_subcommands_now_P(PSTR("G0 Z0"));
               planner.synchronize();
               Redraw_Menu();
             }
@@ -989,8 +991,18 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             else {
               if (!liveadjust) {
                 Popup_Handler(Home);
-                gcode.process_subcommands_now_P( PSTR("G28\nG0 Z0"));
+                gcode.process_subcommands_now_P(PSTR("G28 Z"));
+                #if ENABLED(Z_SAFE_HOMING)
+                  planner.synchronize();
+                  char buf[20];
+                  sprintf(buf, "G0 X%i Y%i", Z_SAFE_HOMING_X_POINT, Z_SAFE_HOMING_Y_POINT);
+                  gcode.process_subcommands_now_P(buf);
+                #else
+                  gcode.process_subcommands_now_P(PSTR("G0 X117.5 Y117.5"));
+                #endif
+                gcode.process_subcommands_now_P(PSTR("G0 Z0"));
                 planner.synchronize();
+                Redraw_Menu();
               }
               liveadjust = !liveadjust;
               Draw_Checkbox(row, liveadjust);
