@@ -2288,7 +2288,7 @@
   // Enable custom icons
   // NB: Requires Ender-3 v2 OEM display firmware update, or you will get blank icons!
   //
-  #define CREALITY_DWIN_EXTUI_CUSTOM_ICONS
+  //#define CREALITY_DWIN_EXTUI_CUSTOM_ICONS
 #endif
 
 //
