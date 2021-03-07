@@ -42,11 +42,6 @@
 
   #include "math.h"
 
-  // for fill_missing_values_lsf
-  #include "../../libs/least_squares_fit.h"
-  #include "../../libs/vector_3.h"
-
-
   void unified_bed_leveling::echo_name() { SERIAL_ECHOPGM("Unified Bed Leveling"); }
 
   void unified_bed_leveling::report_current_mesh() {
