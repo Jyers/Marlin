@@ -674,12 +674,12 @@ void CrealityDWINClass::Update_Status_Bar() {
     if (process == Print) {
       DWIN_Draw_Rectangle(1, Color_Grey, 8, 214, DWIN_WIDTH-8, 238);
       const int8_t npos = (DWIN_WIDTH - 30 * MENU_CHR_W) / 2;
-      DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, npos, 219, dispmsg);
+      DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Green, Color_Bg_Black, npos, 219, dispmsg);
     }
     else {
       DWIN_Draw_Rectangle(1, Color_Bg_Black, 8, 352, DWIN_WIDTH-8, 376);
       const int8_t npos = (DWIN_WIDTH - 30 * MENU_CHR_W) / 2;
-      DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, npos, 357, dispmsg);
+      DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Green, Color_Bg_Black, npos, 357, dispmsg);
     }
     if (-pos >= 30)
       msgscrl = 0;
@@ -690,12 +690,12 @@ void CrealityDWINClass::Update_Status_Bar() {
       if (process == Print) {
         DWIN_Draw_Rectangle(1, Color_Grey, 8, 214, DWIN_WIDTH-8, 238);
         const int8_t npos = (DWIN_WIDTH - strlen(statusmsg) * MENU_CHR_W) / 2;
-        DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, npos, 219, statusmsg);
+        DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Green, Color_Bg_Black, npos, 219, statusmsg);
       }
       else {
         DWIN_Draw_Rectangle(1, Color_Bg_Black, 8, 352, DWIN_WIDTH-8, 376);
         const int8_t npos = (DWIN_WIDTH - strlen(statusmsg) * MENU_CHR_W) / 2;
-        DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, npos, 357, statusmsg);
+        DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Green, Color_Bg_Black, npos, 357, statusmsg);
       }
     }
   }
