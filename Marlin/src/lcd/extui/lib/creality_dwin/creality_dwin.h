@@ -36,7 +36,7 @@ enum processID : uint8_t {
 };
 
 enum popupID : uint8_t {
-  Pause, Stop, Resume, SaveLevel, ETemp, Level, Home, MoveWait, Complete, FilLoad, FilChange, UI, TempWarn, Runout, PidBadExtruder, PidTimeout, PidDone
+  Pause, Stop, Resume, SaveLevel, ETemp, Level, Home, MoveWait, Heating, Complete, FilLoad, FilChange, UI, TempWarn, Runout, PidBadExtruder, PidTimeout, PidDone
 };
 
 enum menuID : uint8_t {
@@ -66,7 +66,8 @@ enum menuID : uint8_t {
       MeshViewer,
       UBLManual,
     InfoMain,
-  Tune
+  Tune,
+  PreheatHotend
 };
 
 
@@ -219,6 +220,9 @@ extern millis_t dwin_heat_time;
 class CrealityDWINClass {
 
 public:
+  struct EEPROM_Settings { // use bit fields to save space, max 48 bytes
+    bool time_format_textual : 1;
+  } eeprom_settings;
 
   inline void Clear_Screen(uint8_t e=3);
   inline void Draw_Float(float value, uint8_t row, bool selected=false, uint8_t minunit=10);
