@@ -68,7 +68,12 @@
   #include "../../feature/bedlevel/bedlevel.h"
 #endif
 
-#if HAS_BED_PROBE
+#if ENABLED(AUTO_BED_LEVELING_UBL)
+  #include "../../libs/least_squares_fit.h"
+  #include "../../libs/vector_3.h"
+#endif
+
+#if ENABLED(HAS_BED_PROBE)
   #include "../../module/probe.h"
 #endif
 
@@ -201,6 +206,78 @@ CrealityDWINClass CrealityDWIN;
       gcode.process_subcommands_now_P(buf);
       planner.synchronize();
     }
+
+    float get_max_value() {
+    float max = __FLT_MIN__;
+    GRID_LOOP(x, y) {
+      if (!isnan(ubl.z_values[x][y]) && ubl.z_values[x][y] > max)
+        max = ubl.z_values[x][y];
+      }
+      return max;
+    }
+
+    float get_min_value() {
+      float min = __FLT_MAX__;
+      GRID_LOOP(x, y) {
+        if (!isnan(ubl.z_values[x][y]) && ubl.z_values[x][y] < min)
+          min = ubl.z_values[x][y];
+      }
+      return min;
+    }
+
+    bool create_plane_from_mesh() {
+      struct linear_fit_data lsf_results;
+      incremental_LSF_reset(&lsf_results);
+      GRID_LOOP(x, y) {
+        if (!isnan(ubl.z_values[x][y])) {
+          xy_pos_t rpos;
+          rpos.x = ubl.mesh_index_to_xpos(x);
+          rpos.y = ubl.mesh_index_to_ypos(y);
+          incremental_LSF(&lsf_results, rpos, ubl.z_values[x][y]);
+        }
+      }
+      
+      if (finish_incremental_LSF(&lsf_results)) {
+        SERIAL_ECHOPGM("Could not complete LSF!");
+        return true;
+      }
+
+      ubl.set_all_mesh_points_to_value(0);
+
+      matrix_3x3 rotation = matrix_3x3::create_look_at(vector_3(lsf_results.A, lsf_results.B, 1));
+      GRID_LOOP(i, j) {
+        float mx = ubl.mesh_index_to_xpos(i),
+              my = ubl.mesh_index_to_ypos(j),
+              mz = ubl.z_values[i][j];
+
+        if (DEBUGGING(LEVELING)) {
+          DEBUG_ECHOPAIR_F("before rotation = [", mx, 7);
+          DEBUG_CHAR(',');
+          DEBUG_ECHO_F(my, 7);
+          DEBUG_CHAR(',');
+          DEBUG_ECHO_F(mz, 7);
+          DEBUG_ECHOPGM("]   ---> ");
+          DEBUG_DELAY(20);
+        }
+
+        apply_rotation_xyz(rotation, mx, my, mz);
+
+        if (DEBUGGING(LEVELING)) {
+          DEBUG_ECHOPAIR_F("after rotation = [", mx, 7);
+          DEBUG_CHAR(',');
+          DEBUG_ECHO_F(my, 7);
+          DEBUG_CHAR(',');
+          DEBUG_ECHO_F(mz, 7);
+          DEBUG_ECHOLNPGM("]");
+          DEBUG_DELAY(20);
+        }
+
+        ubl.z_values[i][j] = mz - lsf_results.D;
+        ExtUI::onMeshUpdate(i, j, ubl.z_values[i][j]);
+      }
+      return false;
+    }
+
   };
   UBL_Settings ubl_conf = UBL_Settings();
 #endif
@@ -355,7 +432,7 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
     const uint16_t total_width_px = DWIN_WIDTH - padding_x - padding_x;
     const uint16_t cell_width_px  = total_width_px / GRID_MAX_POINTS_X;
     const uint16_t cell_height_px = total_width_px / GRID_MAX_POINTS_Y;
-    const float v_max = abs(ubl.get_max_value()), v_min = abs(ubl.get_min_value()), range = max(v_min, v_max);
+    const float v_max = abs(ubl_conf.get_max_value()), v_min = abs(ubl_conf.get_min_value()), range = max(v_min, v_max);
 
     // Clear background from previous selection and select new square
     DWIN_Draw_Rectangle(1, Color_Bg_Black, max(0, padding_x - gridline_width), max(0, padding_y_top - gridline_width), padding_x + total_width_px, padding_y_top + total_width_px);
@@ -409,7 +486,7 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
   }
 
   void CrealityDWINClass::Set_Mesh_Viewer_Status() { // TODO: draw gradient with values as a legend instead
-    float v_max = abs(ubl.get_max_value()), v_min = abs(ubl.get_min_value()), range = max(v_min, v_max);
+    float v_max = abs(ubl_conf.get_max_value()), v_min = abs(ubl_conf.get_min_value()), range = max(v_min, v_max);
     if (v_min > 3e+10F) v_min = 0.0000001;
     if (v_max > 3e+10F) v_max = 0.0000001;
     if (range > 3e+10F) range = 0.0000001;
@@ -2373,7 +2450,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             if (draw) {
               Draw_Menu_Item(row, ICON_ResumeEEPROM, (char*)"Create Plane (>2 points)");
             } else {
-              if (ubl.create_plane_from_mesh()) {
+              if (ubl_conf.create_plane_from_mesh()) {
                 Confirm_Handler((char*)"Error: Couldn't create plane!");
                 break;
               }
