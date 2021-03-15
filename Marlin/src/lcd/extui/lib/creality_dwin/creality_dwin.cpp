@@ -805,6 +805,7 @@ void CrealityDWINClass::Draw_Popup(const char *line1, const char *line2,const ch
   if (process == Menu && mode == Popup) last_selection = selection;
   process = mode;
   Clear_Screen();
+  DWIN_Draw_Rectangle(0, Color_White, 13, 59, 259, 351);
   DWIN_Draw_Rectangle(1, Color_Bg_Window, 14, 60, 258, 350);
   uint8_t ypos;
   if (mode == Popup || mode == Confirm)
