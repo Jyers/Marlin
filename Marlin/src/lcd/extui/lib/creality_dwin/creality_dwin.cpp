@@ -89,7 +89,7 @@
 
 #define CORP_WEBSITE_E "github.com/Jyers"
 
-#define BUILD_NUMBER "1.2.1"
+#define BUILD_NUMBER "1.2.2"
 
 #define DWIN_FONT_MENU font8x16
 #define DWIN_FONT_STAT font10x20
@@ -191,11 +191,11 @@ CrealityDWINClass CrealityDWIN;
     void manual_move() {
       CrealityDWIN.Popup_Handler(MoveWait);
       char buf[20];
-      sprintf(buf, "G0 Z%.3f", (!goto_mesh_value ? Z_CLEARANCE_BETWEEN_PROBES : (mesh_goto_zhop ? 1. : 0.)));
+      sprintf(buf, "G0 F300 Z%.3f", (!goto_mesh_value ? Z_CLEARANCE_BETWEEN_PROBES : (mesh_goto_zhop ? 1. : 0.)));
       gcode.process_subcommands_now_P(buf);
-      sprintf(buf, "G42 I%i J%i", mesh_x, mesh_y);
+      sprintf(buf, "G42 F4000 I%i J%i", mesh_x, mesh_y);
       gcode.process_subcommands_now_P(buf);
-      sprintf(buf, "G0 Z%.3f", goto_mesh_value ? .0 : Z_CLEARANCE_BETWEEN_PROBES);
+      sprintf(buf, "G0 F300 Z%.3f", goto_mesh_value ? .0 : Z_CLEARANCE_BETWEEN_PROBES);
       gcode.process_subcommands_now_P(buf);
       planner.synchronize();
       CrealityDWIN.Redraw_Menu();
@@ -1143,7 +1143,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X32.5 Y32.5\nG0 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X32.5 Y32.5\nG0 F300 Z0"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -1154,7 +1154,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X32.5 Y197.5\nG0 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X32.5 Y197.5\nG0 F300 Z0"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -1165,7 +1165,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X197.5 Y197.5\nG0 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X197.5 Y197.5\nG0 F300 Z0"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -1176,7 +1176,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X197.5 Y32.5\nG0 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X197.5 Y32.5\nG0 F300 Z0"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -1187,7 +1187,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X117.5 Y117.5\nG0 F300 Z0\nM220 S100"));
+            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X117.5 Y117.5\nG0 F300 Z0"));
             planner.synchronize();
             Redraw_Menu();
           }
@@ -1227,12 +1227,12 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               #if ENABLED(Z_SAFE_HOMING)
                 planner.synchronize();
                 char buf[20];
-                sprintf(buf, "G0 X%i Y%i", Z_SAFE_HOMING_X_POINT, Z_SAFE_HOMING_Y_POINT);
+                sprintf(buf, "G0 F4000 X%i Y%i", Z_SAFE_HOMING_X_POINT, Z_SAFE_HOMING_Y_POINT);
                 gcode.process_subcommands_now_P(buf);
               #else
-                gcode.process_subcommands_now_P(PSTR("G0 X117.5 Y117.5"));
+                gcode.process_subcommands_now_P(PSTR("G0 F4000 X117.5 Y117.5"));
               #endif
-              gcode.process_subcommands_now_P(PSTR("G0 Z0"));
+              gcode.process_subcommands_now_P(PSTR("G0 F300 Z0"));
               planner.synchronize();
               Redraw_Menu();
             }
@@ -1252,12 +1252,12 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 #if ENABLED(Z_SAFE_HOMING)
                   planner.synchronize();
                   char buf[20];
-                  sprintf(buf, "G0 X%i Y%i", Z_SAFE_HOMING_X_POINT, Z_SAFE_HOMING_Y_POINT);
+                  sprintf(buf, "G0 F4000 X%i Y%i", Z_SAFE_HOMING_X_POINT, Z_SAFE_HOMING_Y_POINT);
                   gcode.process_subcommands_now_P(buf);
                 #else
-                  gcode.process_subcommands_now_P(PSTR("G0 X117.5 Y117.5"));
+                  gcode.process_subcommands_now_P(PSTR("G0 F4000 X117.5 Y117.5"));
                 #endif
-                gcode.process_subcommands_now_P(PSTR("G0 Z0"));
+                gcode.process_subcommands_now_P(PSTR("G0 F300 Z0"));
                 planner.synchronize();
                 Redraw_Menu();
               }
@@ -2503,6 +2503,10 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                   Popup_Handler(Home);
                   gcode.home_all_axes(true);
                 }
+                #if ENABLED(PREHEAT_BEFORE_LEVELING)
+                  Popup_Handler(Heating);
+                  probe.preheat_for_probing(LEVELING_NOZZLE_TEMP, LEVELING_BED_TEMP);
+                #endif
                 Popup_Handler(Level);
                 gcode.process_subcommands_now_P(PSTR("G29 P0\nG29 P1"));
                 gcode.process_subcommands_now_P(PSTR("G29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nM420 S1"));
@@ -2521,6 +2525,10 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 Popup_Handler(Home);
                 gcode.home_all_axes(true);
               }
+              #if ENABLED(PREHEAT_BEFORE_LEVELING)
+                Popup_Handler(Heating);
+                probe.preheat_for_probing(LEVELING_NOZZLE_TEMP, LEVELING_BED_TEMP);
+              #endif
               ubl_conf.mesh_step_warning = false;
               ubl_conf.manual_move();
               Draw_Menu(UBLManual);
@@ -3026,7 +3034,6 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           case TUNE_ZOFFSET:
             if (draw) {
               Draw_Menu_Item(row, ICON_FanSpeed, (char*)"Z-Offset");
-              // TODO this does not update when using Up/Down below
               Draw_Float(zoffsetvalue, row, false, 100);
             }
             else {
