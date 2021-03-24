@@ -613,27 +613,27 @@ void CrealityDWINClass::Draw_Print_ProgressBar() {
 
 void CrealityDWINClass::Draw_Print_ProgressRemain() {
   uint16_t remainingtime = ui.get_remaining_time();
-  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 176, 187, remainingtime / 3600);
-  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 200, 187, (remainingtime % 3600) / 60);
+  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 2, 176, 187, remainingtime / 3600);
+  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 2, 200, 187, (remainingtime % 3600) / 60);
   if (eeprom_settings.time_format_textual) {
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 192, 187, (char*)"h");
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 216, 187, (char*)"m");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 192, 187, (char*)"h");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 216, 187, (char*)"m");
   }
   else {
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 192, 187, (char*)":");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 192, 187, (char*)":");
   }
 }
 
 void CrealityDWINClass::Draw_Print_ProgressElapsed() {
   duration_t elapsed = print_job_timer.duration();
-  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 42, 187, elapsed.value / 3600);
-  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 66, 187, (elapsed.value % 3600) / 60);
+  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 2, 42, 187, elapsed.value / 3600);
+  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 2, 66, 187, (elapsed.value % 3600) / 60);
   if (eeprom_settings.time_format_textual) {
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 58, 187, (char*)"h");
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 82, 187, (char*)"m");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 58, 187, (char*)"h");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 82, 187, (char*)"m");
   }
   else {
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 58, 187, (char*)":");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 58, 187, (char*)":");
   }
 }
 

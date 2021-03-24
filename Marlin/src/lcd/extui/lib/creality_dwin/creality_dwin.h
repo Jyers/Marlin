@@ -217,6 +217,7 @@ enum menuID : uint8_t {
 #define BarFill_Color     0x10E4  // Fill color of progress bar
 #define Select_Color      0x33BB  // Selected color
 #define Check_Color       0x4E5C  // Check-box check color
+#define Color_Yellow      0xEFE0  // Yellow Color
 
 extern millis_t dwin_heat_time;
 
