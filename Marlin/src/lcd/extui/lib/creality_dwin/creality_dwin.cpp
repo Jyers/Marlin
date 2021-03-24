@@ -72,7 +72,6 @@
   #include "../../libs/least_squares_fit.h"
   #include "../../libs/vector_3.h"
 #endif
-
 #if ENABLED(HAS_BED_PROBE)
   #include "../../module/probe.h"
 #endif
@@ -1592,7 +1591,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define TEMP_HOTEND (TEMP_BACK + ENABLED(HAS_HOTEND))
       #define TEMP_BED (TEMP_HOTEND + ENABLED(HAS_HEATED_BED))
       #define TEMP_FAN (TEMP_BED + ENABLED(HAS_FAN))
-      #define TEMP_PREHEAT1 (TEMP_FAN + (PREHEAT_COUNT >= 1))
+      #define TEMP_PID (TEMP_FAN + ANY(HAS_HOTEND, HAS_HEATED_BED))
+      #define TEMP_PREHEAT1 (TEMP_PID + (PREHEAT_COUNT >= 1))
       #define TEMP_PREHEAT2 (TEMP_PREHEAT1 + (PREHEAT_COUNT >= 2))
       #define TEMP_PREHEAT3 (TEMP_PREHEAT2 + (PREHEAT_COUNT >= 3))
       #define TEMP_PREHEAT4 (TEMP_PREHEAT3 + (PREHEAT_COUNT >= 4))
@@ -1638,6 +1638,16 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             }
             else {
               Modify_Value(thermalManager.fan_speed[0], MIN_FAN_SPEED, MAX_FAN_SPEED, 1);
+            }
+            break;
+        #endif
+        #if ANY(HAS_HOTEND, HAS_HEATED_BED)
+          case TEMP_PID:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Step, (char*)"PID Autotune", NULL, true);
+            }
+            else {
+              Draw_Menu(PID);
             }
             break;
         #endif
@@ -1693,6 +1703,88 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #endif
       }
       break;
+    #if ANY(HAS_HOTEND, HAS_HEATED_BED)
+      case PID:
+
+        #define PID_BACK 0
+        #define PID_HOTEND (PID_BACK + ENABLED(HAS_HOTEND))
+        #define PID_BED (PID_HOTEND + ENABLED(HAS_HEATED_BED))
+        #define PID_E_TEMP (PID_BED + ENABLED(HAS_HOTEND))
+        #define PID_BED_TEMP (PID_E_TEMP + ENABLED(HAS_HEATED_BED))
+        #define PID_CYCLES (PID_BED_TEMP + 1)
+        #define PID_TOTAL PID_CYCLES
+
+        static uint16_t PID_e_temp = 180;
+        static uint16_t PID_bed_temp = 50;
+        static uint8_t PID_cycles = 5;
+
+        switch (item) {
+          case PID_BACK:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+            }
+            else {
+              Draw_Menu(TempMenu, TEMP_PID);
+            }
+            break;
+          #if HAS_HOTEND
+            case PID_HOTEND:
+              if (draw) {
+                Draw_Menu_Item(row, ICON_SetEndTemp, (char*)"Hotend");
+              }
+              else {
+                char buf[30];
+                sprintf(buf, "M303 E0 C%i S%i", PID_cycles, PID_e_temp);
+                gcode.process_subcommands_now_P(buf);
+              }
+              break;
+          #endif
+          #if HAS_HEATED_BED
+            case PID_BED:
+              if (draw) {
+                Draw_Menu_Item(row, ICON_SetBedTemp, (char*)"Bed");
+              }
+              else {
+                char buf[30];
+                sprintf(buf, "M303 E-1 C%i S%i", PID_cycles, PID_bed_temp);
+                gcode.process_subcommands_now_P(buf);
+              }
+              break;
+          #endif
+          #if HAS_HOTEND
+            case PID_E_TEMP:
+              if (draw) {
+                Draw_Menu_Item(row, ICON_FanSpeed, (char*)"Hotend Temp");
+                Draw_Float(PID_e_temp, row, false, 1);
+              }
+              else {
+                Modify_Value(PID_e_temp, MIN_E_TEMP, MAX_E_TEMP, 1);
+              }
+              break;
+          #endif
+          #if HAS_HEATED_BED
+            case PID_BED_TEMP:
+              if (draw) {
+                Draw_Menu_Item(row, ICON_FanSpeed, (char*)"Bed Temp");
+                Draw_Float(PID_bed_temp, row, false, 1);
+              }
+              else {
+                Modify_Value(PID_bed_temp, MIN_BED_TEMP, MAX_BED_TEMP, 1);
+              }
+              break;
+          #endif
+          case PID_CYCLES:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_FanSpeed, (char*)"Cycles");
+              Draw_Float(PID_cycles, row, false, 1);
+            }
+            else {
+              Modify_Value(PID_cycles, 3, 50, 1);
+            }
+            break;
+        }
+        break;
+    #endif
     #if (PREHEAT_COUNT >= 1)
       case Preheat1:
 
@@ -2505,7 +2597,10 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 }
                 #if ENABLED(PREHEAT_BEFORE_LEVELING)
                   Popup_Handler(Heating);
-                  probe.preheat_for_probing(LEVELING_NOZZLE_TEMP, LEVELING_BED_TEMP);
+                  thermalManager.setTargetHotend(LEVELING_NOZZLE_TEMP, 0);
+                  thermalManager.setTargetBed(LEVELING_BED_TEMP);
+                  thermalManager.wait_for_hotend(0);
+                  thermalManager.wait_for_bed_heating();
                 #endif
                 Popup_Handler(Level);
                 gcode.process_subcommands_now_P(PSTR("G29 P0\nG29 P1"));
@@ -2527,7 +2622,10 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               }
               #if ENABLED(PREHEAT_BEFORE_LEVELING)
                 Popup_Handler(Heating);
-                probe.preheat_for_probing(LEVELING_NOZZLE_TEMP, LEVELING_BED_TEMP);
+                thermalManager.setTargetHotend(LEVELING_NOZZLE_TEMP, 0);
+                thermalManager.setTargetBed(LEVELING_BED_TEMP);
+                thermalManager.wait_for_hotend(0);
+                thermalManager.wait_for_bed_heating();
               #endif
               ubl_conf.mesh_step_warning = false;
               ubl_conf.manual_move();
@@ -2877,7 +2975,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define MMESH_OFFSET (MMESH_NEXT + 1)
       #define MMESH_UP (MMESH_OFFSET + 1)
       #define MMESH_DOWN (MMESH_UP + 1)
-      #define MMESH_TOTAL MMESH_DOWN
+      #define MMESH_OLD (MMESH_DOWN + 1)
+      #define MMESH_TOTAL MMESH_OLD
 
       case ManualMesh:
         switch (item) {
@@ -2949,6 +3048,32 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 current_position.z -= 0.01f;
                 sync_plan_position();
                 Draw_Float(current_position.z, row-2, false, 100);
+              }
+            }
+            break;
+          case MMESH_OLD:
+            if (ExtUI::getMeshValid()) {
+              uint8 mesh_x, mesh_y;
+              // 0,0 -> 1,0 -> 2,0 -> 2,1 -> 1,1 -> 0,1 -> 0,2 -> 1,2 -> 2,2
+              mesh_y = (gridpoint - 1) / GRID_MAX_POINTS_Y;
+              mesh_x = (gridpoint - 1) % GRID_MAX_POINTS_X;
+
+              if (mesh_y % 2 == 1) {
+                mesh_x = GRID_MAX_POINTS_X - mesh_x - 1;
+              }
+
+              const xy_uint8_t mesh_pos { mesh_x, mesh_y };
+              const float currval = ExtUI::getMeshPoint(mesh_pos);
+
+              if (draw) {
+                Draw_Menu_Item(row, ICON_Zoffset, (char*)"Goto Mesh Value");
+                Draw_Float(currval, row, false, 100);
+              } else {
+                current_position.z = currval;
+                planner.synchronize();
+                planner.buffer_line(current_position, homing_feedrate(Z_AXIS), active_extruder);
+                planner.synchronize();
+                Draw_Float(current_position.z, row-3, false, 100);
               }
             }
             break;
@@ -3254,6 +3379,10 @@ char* CrealityDWINClass::Get_Menu_Title(uint8_t menu) {
       return (char*)"Control";
     case TempMenu:
       return (char*)"Temperature";
+    #if ANY(HAS_HOTEND, HAS_HEATED_BED)
+      case PID:
+        return (char*)"PID Autotune";
+    #endif
     #if (PREHEAT_COUNT >= 1)
       case Preheat1:
         return (char*)(PREHEAT_1_LABEL " Settings");
@@ -3340,6 +3469,10 @@ int CrealityDWINClass::Get_Menu_Size(uint8_t menu) {
       return CONTROL_TOTAL;
     case TempMenu:
       return TEMP_TOTAL;
+    #if ANY(HAS_HOTEND, HAS_HEATED_BED)
+      case PID:
+        return PID_TOTAL;
+    #endif
     #if (PREHEAT_COUNT >= 1)
       case Preheat1:
         return PREHEAT1_TOTAL;
