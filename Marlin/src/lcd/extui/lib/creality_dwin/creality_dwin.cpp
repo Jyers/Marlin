@@ -72,6 +72,7 @@
   #include "../../libs/least_squares_fit.h"
   #include "../../libs/vector_3.h"
 #endif
+
 #if ENABLED(HAS_BED_PROBE)
   #include "../../module/probe.h"
 #endif
@@ -954,7 +955,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Popup_Handler(Home);
               gcode.home_all_axes(true);
             }
-            #if ANY(HAS_ONESTEP_LEVELING, PROBE_MANUALLY)
+            #if HAS_LEVELING
               gcode.process_subcommands_now_P(PSTR("M420 S0"));
             #endif
             Draw_Menu(ManualLevel);
@@ -966,6 +967,9 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Draw_Menu_Item(row, ICON_Zoffset, (char*)"Z-Offset", NULL, true);
             }
             else {
+              #if HAS_LEVELING
+                gcode.process_subcommands_now_P(PSTR("M420 S0"));
+              #endif
               Draw_Menu(ZOffset);
             }
             break;
@@ -1130,7 +1134,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu_Item(row, ICON_Back, (char*)"Back");
           }
           else {
-            #if ANY(HAS_ONESTEP_LEVELING, PROBE_MANUALLY)
+            #if HAS_LEVELING
               gcode.process_subcommands_now_P(PSTR("M420 S1"));
             #endif
             Draw_Menu(Prepare, PREPARE_MANUALLEVEL);
@@ -1212,6 +1216,9 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             }
             else {
               liveadjust = false;
+              #if HAS_LEVELING
+                gcode.process_subcommands_now_P(PSTR("M420 S1"));
+              #endif
               Draw_Menu(Prepare, PREPARE_ZOFFSET);
             }
             break;
@@ -2597,8 +2604,10 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                 }
                 #if ENABLED(PREHEAT_BEFORE_LEVELING)
                   Popup_Handler(Heating);
-                  thermalManager.setTargetHotend(LEVELING_NOZZLE_TEMP, 0);
-                  thermalManager.setTargetBed(LEVELING_BED_TEMP);
+                  if (thermalManager.degTargetHotend(0) < LEVELING_NOZZLE_TEMP)
+                    thermalManager.setTargetHotend(LEVELING_NOZZLE_TEMP, 0);
+                  if (thermalManager.degTargetBed() < LEVELING_BED_TEMP)
+                    thermalManager.setTargetBed(LEVELING_BED_TEMP);
                   thermalManager.wait_for_hotend(0);
                   thermalManager.wait_for_bed_heating();
                 #endif
@@ -2622,8 +2631,10 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               }
               #if ENABLED(PREHEAT_BEFORE_LEVELING)
                 Popup_Handler(Heating);
-                thermalManager.setTargetHotend(LEVELING_NOZZLE_TEMP, 0);
-                thermalManager.setTargetBed(LEVELING_BED_TEMP);
+                if (thermalManager.degTargetHotend(0) < LEVELING_NOZZLE_TEMP)
+                  thermalManager.setTargetHotend(LEVELING_NOZZLE_TEMP, 0);
+                if (thermalManager.degTargetBed() < LEVELING_BED_TEMP)
+                  thermalManager.setTargetBed(LEVELING_BED_TEMP);
                 thermalManager.wait_for_hotend(0);
                 thermalManager.wait_for_bed_heating();
               #endif
@@ -3549,6 +3560,9 @@ void CrealityDWINClass::Popup_Handler(uint8_t popupid, bool option/*=false*/) {
     case Resume:
       Draw_Popup((char*)"Resume Print?", (char*)"Looks Like the last", (char*)"print was interupted.", Popup);
       break;
+    case ConfLevel:
+      Draw_Popup((char*)"Confirm Leveling", (char*)"", (char*)"", Popup);
+      break;
     case SaveLevel:
       Draw_Popup((char*)"Leveling Complete", (char*)"Save to EEPROM?", (char*)"", Popup);
       break;
@@ -3654,10 +3668,7 @@ inline void CrealityDWINClass::Main_Menu_Control() {
         #if ENABLED(AUTO_BED_LEVELING_UBL)
           Draw_Menu(UBL);
         #elif HAS_ONESTEP_LEVELING
-          Popup_Handler(Level);
-          gcode.process_subcommands_now_P(PSTR("G28\nG29"));
-          planner.synchronize();
-          Popup_Handler(SaveLevel);
+          Popup_Handler(ConfLevel);
         #elif ENABLED(PROBE_MANUALLY)
           gridpoint = 1;
           if (axes_should_home()) {
@@ -3714,13 +3725,17 @@ inline void CrealityDWINClass::Value_Control() {
     tempvalue -= EncoderRate.encoderMoveValue;
   }
   else if (encoder_diffState == ENCODER_DIFF_ENTER) {
-    if ((active_menu == ZOffset && liveadjust) || (active_menu == Tune && selection == 6/*ZOffset*/)) {
+    if (active_menu == ZOffset && liveadjust) {
       planner.synchronize();
-      float pos = current_position.z;
       current_position.z += (tempvalue/valueunit - zoffsetvalue);
       planner.buffer_line(current_position, homing_feedrate(Z_AXIS), active_extruder);
-      current_position.z = pos;
+      current_position.z = 0;
       sync_plan_position();
+    }
+    else if (active_menu == Tune && selection == TUNE_ZOFFSET) {
+      char buf[20];
+      sprintf(buf, "M290 Z%f", (tempvalue/valueunit - zoffsetvalue));
+      gcode.process_subcommands_now_P(buf);
     }
     switch (valuetype) {
       case 0: *(float*)valuepointer = tempvalue/valueunit; break;
@@ -3984,6 +3999,16 @@ inline void CrealityDWINClass::Popup_Control() {
         }
         else {
           Redraw_Menu();
+        }
+        break;
+      case ConfLevel:
+        if (selection==0) {
+          Popup_Handler(Level);
+          gcode.process_subcommands_now_P(PSTR("G28\nG29"));
+          planner.synchronize();
+          Popup_Handler(SaveLevel);
+        } else {
+          Draw_Main_Menu(3);
         }
         break;
       case SaveLevel:
