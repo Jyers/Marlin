@@ -2380,6 +2380,11 @@
   // NB: Requires Ender-3 v2 OEM display firmware update, or you will get blank icons!
   //
   //#define CREALITY_DWIN_EXTUI_CUSTOM_ICONS
+  //#define CREALITY_DWIN_EXTUI_CUSTOM_ICONS
+  //
+  // Force a maximum 115200 bitrate for the Ender 3 V2 OEM LCD, independently from the one of Creality board.
+  //
+  #define E3V2_LCD_BAUDRATE 115200
 #endif
 
 //
