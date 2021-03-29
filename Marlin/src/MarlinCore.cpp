@@ -1063,7 +1063,12 @@ void setup() {
   #endif
   #define SETUP_RUN(C) do{ SETUP_LOG(STRINGIFY(C)); C; }while(0)
 
-  MYSERIAL1.begin(BAUDRATE);
+  #if ENABLED(E3V2_LCD_BAUDRATE)
+    MYSERIAL1.begin(E3V2_LCD_BAUDRATE);
+  #else
+    MYSERIAL1.begin(BAUDRATE);
+  #endif
+                    
   millis_t serial_connect_timeout = millis() + 1000UL;
   while (!MYSERIAL1.connected() && PENDING(millis(), serial_connect_timeout)) { /*nada*/ }
 
