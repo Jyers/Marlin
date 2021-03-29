@@ -1063,8 +1063,8 @@ void setup() {
   #endif
   #define SETUP_RUN(C) do{ SETUP_LOG(STRINGIFY(C)); C; }while(0)
 
-  #if ENABLED(E3V2_LCD_BAUDRATE)
-    MYSERIAL1.begin(E3V2_LCD_BAUDRATE);
+  #if ENABLED(LCD_BAUDRATE)
+    MYSERIAL1.begin(LCD_BAUDRATE);
   #else
     MYSERIAL1.begin(BAUDRATE);
   #endif
