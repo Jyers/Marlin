@@ -2384,7 +2384,7 @@
   //
   // Force a maximum 115200 bitrate for the Ender 3 V2 OEM LCD, independently from the one of Creality board.
   //
-  #define E3V2_LCD_BAUDRATE 115200
+  #define LCD_BAUDRATE 115200
 #endif
 
 //
