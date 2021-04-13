@@ -326,8 +326,20 @@ inline void CrealityDWINClass::Draw_Menu_Item(uint8_t row, uint8_t icon/*=0*/, c
   if (label2) DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, label2_offset_x, MBASE(row) - 1 + label_offset_y, label2); // Draw Label
   if (icon) DWIN_ICON_Show(ICON, icon, 26, MBASE(row) - 3);   //Draw Menu Icon
   if (more) DWIN_ICON_Show(ICON, ICON_More, 226, MBASE(row) - 3); // Draw More Arrow
-  DWIN_Draw_Line(Line_Color, 16, MBASE(row) + 33, 256, MBASE(row) + 34); // Draw Menu Line
+  DWIN_Draw_Line(GetColor(1, eeprom_settings.menu_split_line), 16, MBASE(row) + 33, 256, MBASE(row) + 33); // Draw Menu Line
 }
+
+inline void CrealityDWINClass::Draw_Menu_Item(uint8_t row, uint8_t icon/*=0*/, uint16_t color, char *label1, char *label2, bool more/*=false*/, bool centered/*=false*/) {
+  const uint8_t label_offset_y = !(label1 && label2) ? 0 : MENU_CHR_H * 3 / 5;
+  const uint8_t label1_offset_x = !centered ? LBLX : LBLX * 4/5 + max(LBLX * 1U/5, (DWIN_WIDTH - LBLX - (label1 ? strlen(label1) : 0) * MENU_CHR_W) / 2);
+  const uint8_t label2_offset_x = !centered ? LBLX : LBLX * 4/5 + max(LBLX * 1U/5, (DWIN_WIDTH - LBLX - (label2 ? strlen(label2) : 0) * MENU_CHR_W) / 2);
+  if (label1) DWIN_Draw_String(false, false, DWIN_FONT_MENU, color, Color_Bg_Black, label1_offset_x, MBASE(row) - 1 - label_offset_y, label1); // Draw Label
+  if (label2) DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Black, label2_offset_x, MBASE(row) - 1 + label_offset_y, label2); // Draw Label
+  if (icon) DWIN_ICON_Show(ICON, icon, 26, MBASE(row) - 3);   //Draw Menu Icon
+  if (more) DWIN_ICON_Show(ICON, ICON_More, 226, MBASE(row) - 3); // Draw More Arrow
+  DWIN_Draw_Line(GetColor(1, eeprom_settings.menu_split_line), 16, MBASE(row) + 33, 256, MBASE(row) + 33); // Draw Menu Line
+}
+
 
 inline void CrealityDWINClass::Draw_Checkbox(uint8_t row, bool value) {
   #if ENABLED(CREALITY_DWIN_EXTUI_CUSTOM_ICONS) // Draw appropriate checkbox icon
@@ -360,7 +372,78 @@ inline void CrealityDWINClass::Draw_Menu(uint8_t menu, uint8_t select/*=0*/, uin
   Clear_Screen();
   Draw_Title(Get_Menu_Title(menu));
   LOOP_L_N(i, TROWS) Menu_Item_Handler(menu, i + scrollpos);
-  DWIN_Draw_Rectangle(1, Rectangle_Color, 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
+  DWIN_Draw_Rectangle(1, GetColor(0, eeprom_settings.cursor_color), 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
+}
+
+inline uint16_t CrealityDWINClass::GetColor(uint8_t section, uint8_t color) {
+
+  switch (color){
+    case 1: // White
+      if (section == 1){ // we use the section to apply lighter colors for the menu split line, as vivid colors does not look very good
+        return Color_Light_White;
+      }else{
+        return Color_White;
+      }
+      break;
+    case 2: // Blue
+      if(section == 1){
+        return Line_Color;
+      }else{
+        return Color_Blue;
+      }
+      break;
+    case 3: // Yellow
+     if(section == 1){
+      return Color_Light_Yellow;
+     }else{
+       return Color_Yellow;
+     }
+      break;
+    case 4: // Red
+     if(section == 1){
+      return Color_Light_Red;
+     }else{
+       return Color_Red;
+     }
+      break;  
+    case 5: // Green
+     if(section == 1){
+      return Color_Light_Green;
+     }else{
+       return Color_Green;
+     }
+      break;  
+    case 6: // Magenta
+     if(section == 1){
+      return Color_Light_Magenta;
+     }else{
+       return Color_Magenta;
+     }
+      break;
+    case 7: // Brown
+     if(section == 1){
+      return Color_Light_Brown;
+     }else{
+       return Color_Brown;
+     }
+      break;                        
+
+    default:
+        switch (section){
+        case 0:
+          return Rectangle_Color;
+          break;
+        case 1:
+          return Line_Color;  
+          break;
+        case 2:
+          return Color_White;  
+          break;
+        default: // default color
+          return Color_White;
+          break;  
+        }
+  }
 }
 
 inline void CrealityDWINClass::Redraw_Menu() {
@@ -377,7 +460,7 @@ inline void CrealityDWINClass::Redraw_Menu() {
 void CrealityDWINClass::Main_Menu_Icons() {
   if (selection == 0) {
     DWIN_ICON_Show(ICON, ICON_Print_1, 17, 130);
-    DWIN_Draw_Rectangle(0, Color_White, 17, 130, 126, 229);
+    DWIN_Draw_Rectangle(0, GetColor(2, eeprom_settings.highlight_box), 17, 130, 126, 229);
     DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 52, 200, F("Print"));
   }
   else {
@@ -386,7 +469,7 @@ void CrealityDWINClass::Main_Menu_Icons() {
   }
   if (selection == 1) {
     DWIN_ICON_Show(ICON, ICON_Prepare_1, 145, 130);
-    DWIN_Draw_Rectangle(0, Color_White, 145, 130, 254, 229);
+    DWIN_Draw_Rectangle(0, GetColor(2, eeprom_settings.highlight_box), 145, 130, 254, 229);
     DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 170, 200, F("Prepare"));
   }
   else {
@@ -395,7 +478,7 @@ void CrealityDWINClass::Main_Menu_Icons() {
   }
   if (selection == 2) {
     DWIN_ICON_Show(ICON, ICON_Control_1, 17, 246);
-    DWIN_Draw_Rectangle(0, Color_White, 17, 246, 126, 345);
+    DWIN_Draw_Rectangle(0, GetColor(2, eeprom_settings.highlight_box), 17, 246, 126, 345);
     DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 43, 317, F("Control"));
   }
   else {
@@ -405,7 +488,7 @@ void CrealityDWINClass::Main_Menu_Icons() {
   #if ANY(HAS_ONESTEP_LEVELING, AUTO_BED_LEVELING_UBL, PROBE_MANUALLY) 
     if (selection == 3) {
       DWIN_ICON_Show(ICON, ICON_Leveling_1, 145, 246);
-      DWIN_Draw_Rectangle(0, Color_White, 145, 246, 254, 345);
+      DWIN_Draw_Rectangle(0, GetColor(2, eeprom_settings.highlight_box), 145, 246, 254, 345);
       DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 179, 317, F("Level"));
     }
     else {
@@ -415,7 +498,7 @@ void CrealityDWINClass::Main_Menu_Icons() {
   #else
     if (selection == 3) {
       DWIN_ICON_Show(ICON, ICON_Info_1, 145, 246);
-      DWIN_Draw_Rectangle(0, Color_White, 145, 246, 254, 345);
+      DWIN_Draw_Rectangle(0, GetColor(2, ui_colors.highlight_box), 145, 246, 254, 345);
       DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 181, 317, F("Info"));
     }
     else {
@@ -432,6 +515,7 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
   selection = select;
   Clear_Screen();
   Draw_Title(Get_Menu_Title(MainMenu));
+  SERIAL_ECHOPGM("\nDWIN handshake ");
   DWIN_ICON_Show(ICON, ICON_LOGO, 71, 72);
   Main_Menu_Icons();
 }
@@ -519,7 +603,7 @@ void CrealityDWINClass::Draw_Main_Menu(uint8_t select/*=0*/) {
 void CrealityDWINClass::Print_Screen_Icons() {
   if (selection == 0) {
     DWIN_ICON_Show(ICON, ICON_Setup_1, 8, 252);
-    DWIN_Draw_Rectangle(0, Color_White, 8, 252, 87, 351);
+    DWIN_Draw_Rectangle(0, GetColor(2, eeprom_settings.highlight_box), 8, 252, 87, 351);
     DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 30, 322, F("Tune"));
   }
   else {
@@ -528,7 +612,7 @@ void CrealityDWINClass::Print_Screen_Icons() {
   }
   if (selection == 2) {
     DWIN_ICON_Show(ICON, ICON_Stop_1, 184, 252);
-    DWIN_Draw_Rectangle(0, Color_White, 184, 252, 263, 351);
+    DWIN_Draw_Rectangle(0, GetColor(2, eeprom_settings.highlight_box), 184, 252, 263, 351);
     DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 205, 322, F("Stop"));
   }
   else {
@@ -538,7 +622,7 @@ void CrealityDWINClass::Print_Screen_Icons() {
   if (paused) {
     if (selection == 1) {
       DWIN_ICON_Show(ICON, ICON_Continue_1, 96, 252);
-      DWIN_Draw_Rectangle(0, Color_White, 96, 252, 175, 351);
+      DWIN_Draw_Rectangle(0, GetColor(2, eeprom_settings.highlight_box), 96, 252, 175, 351);
       DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 114, 322, F("Print"));
     }
     else {
@@ -549,7 +633,7 @@ void CrealityDWINClass::Print_Screen_Icons() {
   else {
     if (selection == 1) {
       DWIN_ICON_Show(ICON, ICON_Pause_1, 96, 252);
-      DWIN_Draw_Rectangle(0, Color_White, 96, 252, 175, 351);
+      DWIN_Draw_Rectangle(0, GetColor(2, eeprom_settings.highlight_box), 96, 252, 175, 351);
       DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_White, Color_Bg_Blue, 114, 322, F("Pause"));
     }
     else {
@@ -615,33 +699,33 @@ void CrealityDWINClass::Draw_Print_ProgressBar() {
   uint8_t printpercent = sdprint ? card.percentDone() : (ui._get_progress()/100);
   DWIN_ICON_Show(ICON, ICON_Bar, 15, 93);
   DWIN_Draw_Rectangle(1, BarFill_Color, 16 + printpercent * 240 / 100, 93, 256, 113);
-  DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_MENU, Percent_Color, Color_Bg_Black, 3, 109, 133, printpercent);
-  DWIN_Draw_String(false, false, DWIN_FONT_MENU, Percent_Color, Color_Bg_Black, 133, 133, (char*)"%");
+  DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_MENU, GetColor(3, eeprom_settings.progress_text), Color_Bg_Black, 3, 109, 133, printpercent);
+  DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(3, eeprom_settings.progress_text), Color_Bg_Black, 133, 133, (char*)"%");
 }
 
 void CrealityDWINClass::Draw_Print_ProgressRemain() {
   uint16_t remainingtime = ui.get_remaining_time();
-  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 2, 176, 187, remainingtime / 3600);
-  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 2, 200, 187, (remainingtime % 3600) / 60);
+  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, GetColor(4,eeprom_settings.progress_remain_text), Color_Bg_Black, 2, 176, 187, remainingtime / 3600);
+  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, GetColor(4,eeprom_settings.progress_remain_text), Color_Bg_Black, 2, 200, 187, (remainingtime % 3600) / 60);
   if (eeprom_settings.time_format_textual) {
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 192, 187, (char*)"h");
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 216, 187, (char*)"m");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(4,eeprom_settings.progress_remain_text), Color_Bg_Black, 192, 187, (char*)"h");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(4,eeprom_settings.progress_remain_text), Color_Bg_Black, 216, 187, (char*)"m");
   }
   else {
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 192, 187, (char*)":");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(4,eeprom_settings.progress_remain_text), Color_Bg_Black, 192, 187, (char*)":");
   }
 }
 
 void CrealityDWINClass::Draw_Print_ProgressElapsed() {
   duration_t elapsed = print_job_timer.duration();
-  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 2, 42, 187, elapsed.value / 3600);
-  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 2, 66, 187, (elapsed.value % 3600) / 60);
+  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, GetColor(5,eeprom_settings.progress_elapsed_text), Color_Bg_Black, 2, 42, 187, elapsed.value / 3600);
+  DWIN_Draw_IntValue(true, true, 1, DWIN_FONT_MENU, GetColor(5,eeprom_settings.progress_elapsed_text), Color_Bg_Black, 2, 66, 187, (elapsed.value % 3600) / 60);
   if (eeprom_settings.time_format_textual) {
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 58, 187, (char*)"h");
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 82, 187, (char*)"m");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(5,eeprom_settings.progress_elapsed_text), Color_Bg_Black, 58, 187, (char*)"h");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(5,eeprom_settings.progress_elapsed_text), Color_Bg_Black, 82, 187, (char*)"m");
   }
   else {
-    DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Yellow, Color_Bg_Black, 58, 187, (char*)":");
+    DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(5,eeprom_settings.progress_elapsed_text), Color_Bg_Black, 58, 187, (char*)":");
   }
 }
 
@@ -695,7 +779,7 @@ void CrealityDWINClass::Draw_SD_List(bool removed/*=false*/) {
     DWIN_Draw_Rectangle(1, Color_Bg_Red, 10, MBASE(3) - 10, DWIN_WIDTH - 10, MBASE(4));
     DWIN_Draw_String(false, false, font16x32, Color_Yellow, Color_Bg_Red, ((DWIN_WIDTH) - 8 * 16) / 2, MBASE(3), (char*)"No Media");
   }
-  DWIN_Draw_Rectangle(1, Rectangle_Color, 0, MBASE(0) - 18, 14, MBASE(0) + 33);
+  DWIN_Draw_Rectangle(1, GetColor(0, eeprom_settings.cursor_color), 0, MBASE(0) - 18, 14, MBASE(0) + 33);
 }
 
 void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
@@ -708,23 +792,23 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
     static int16_t flow = -1;
     if (icons) { 
       DWIN_ICON_Show(ICON, ICON_HotendTemp, 10, 383);
-      DWIN_Draw_String(false, false, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 25 + 3 * STAT_CHR_W + 5, 384, F("/"));
+      DWIN_Draw_String(false, false, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 25 + 3 * STAT_CHR_W + 5, 384, F("/"));
     }
     if (thermalManager.temp_hotend[0].celsius != hotend) {
       hotend = thermalManager.temp_hotend[0].celsius;
-      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 3, 28, 384, thermalManager.temp_hotend[0].celsius);
+      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 3, 28, 384, thermalManager.temp_hotend[0].celsius);
     }
     if (thermalManager.temp_hotend[0].target != hotendtarget) {
       hotendtarget = thermalManager.temp_hotend[0].target;
-      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 3, 25 + 4 * STAT_CHR_W + 6, 384, thermalManager.temp_hotend[0].target);
+      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 3, 25 + 4 * STAT_CHR_W + 6, 384, thermalManager.temp_hotend[0].target);
     }
     if (icons) {
       DWIN_ICON_Show(ICON, ICON_StepE, 112, 417);
-      DWIN_Draw_String(false, false, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 116 + 5 * STAT_CHR_W + 2, 417, F("%"));
+      DWIN_Draw_String(false, false, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 116 + 5 * STAT_CHR_W + 2, 417, F("%"));
     } 
     if (planner.flow_percentage[0] != flow) {
       flow = planner.flow_percentage[0];
-      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 3, 116 + 2 * STAT_CHR_W, 417, planner.flow_percentage[0]);
+      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 3, 116 + 2 * STAT_CHR_W, 417, planner.flow_percentage[0]);
     }
   #endif
 
@@ -733,15 +817,15 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
     static int16_t bedtarget = -1;
     if (icons) {
       DWIN_ICON_Show(ICON, ICON_BedTemp, 10, 416);
-      DWIN_Draw_String(false, false, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 25 + 3 * STAT_CHR_W + 5, 417, F("/"));
+      DWIN_Draw_String(false, false, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 25 + 3 * STAT_CHR_W + 5, 417, F("/"));
     }
     if (thermalManager.temp_bed.celsius != bed) {
       bed = thermalManager.temp_bed.celsius;
-      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 3, 28, 417, thermalManager.temp_bed.celsius);
+      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 3, 28, 417, thermalManager.temp_bed.celsius);
     }
     if (thermalManager.temp_bed.target != bedtarget) {
       bedtarget = thermalManager.temp_bed.target;
-      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 3, 25 + 4 * STAT_CHR_W + 6, 417, thermalManager.temp_bed.target);
+      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 3, 25 + 4 * STAT_CHR_W + 6, 417, thermalManager.temp_bed.target);
     }
   #endif
 
@@ -750,7 +834,7 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
     if (icons) DWIN_ICON_Show(ICON, ICON_FanSpeed, 187, 383);
     if (thermalManager.fan_speed[0] != fan) {
       fan = thermalManager.fan_speed[0];
-      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 3, 195 + 2 * STAT_CHR_W, 384, thermalManager.fan_speed[0]);
+      DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 3, 195 + 2 * STAT_CHR_W, 384, thermalManager.fan_speed[0]);
     }
   #endif
 
@@ -760,12 +844,12 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
     if (zoffsetvalue != offset) {
       offset = zoffsetvalue;
       if (zoffsetvalue < 0) {
-        DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 2, 2, 207, 417, -zoffsetvalue * 100);
-        DWIN_Draw_String(false, true, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 205, 419, (char*)"-");
+        DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 2, 2, 207, 417, -zoffsetvalue * 100);
+        DWIN_Draw_String(false, true, DWIN_FONT_MENU, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 205, 419, (char*)"-");
       }
       else {
-        DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 2, 2, 207, 417, zoffsetvalue* 100);
-        DWIN_Draw_String(false, true, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 205, 419, (char*)" ");
+        DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 2, 2, 207, 417, zoffsetvalue* 100);
+        DWIN_Draw_String(false, true, DWIN_FONT_MENU, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 205, 419, (char*)" ");
       }
     }
   #endif
@@ -773,11 +857,11 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
   static int16_t feedrate = -1;
   if (icons) {
     DWIN_ICON_Show(ICON, ICON_Speed, 113, 383);
-    DWIN_Draw_String(false, false, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 116 + 5 * STAT_CHR_W + 2, 384, F("%"));
+    DWIN_Draw_String(false, false, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 116 + 5 * STAT_CHR_W + 2, 384, F("%"));
   }
   if (feedrate_percentage != feedrate) {
     feedrate = feedrate_percentage;
-    DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, Color_White, Color_Bg_Black, 3, 116 + 2 * STAT_CHR_W, 384, feedrate_percentage);
+    DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(7,eeprom_settings.status_area_text), Color_Bg_Black, 3, 116 + 2 * STAT_CHR_W, 384, feedrate_percentage);
   }
 
   static float x = -1;
@@ -791,20 +875,20 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
   }
   if (current_position.x != x) {
     x = current_position.x;
-    DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 3, 1, 35, 459, current_position.x * 10);
+    DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, GetColor(8,eeprom_settings.coordinates_text), Color_Bg_Black, 3, 1, 35, 459, current_position.x * 10);
   }
   if (current_position.y != y) {
     y = current_position.y;
-    DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 3, 1, 120, 459, current_position.y * 10);
+    DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, GetColor(8,eeprom_settings.coordinates_text), Color_Bg_Black, 3, 1, 120, 459, current_position.y * 10);
   }
   if (current_position.z != z) {
     z = current_position.z < Z_MAX_POS * 10 ? current_position.z : (current_position.z - 67295);
     if (z >= 0) {
-      DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 3, 2, 205, 459, z * 100);
+      DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, GetColor(8,eeprom_settings.coordinates_text), Color_Bg_Black, 3, 2, 205, 459, z * 100);
     }
     else {
-      DWIN_Draw_String(false, true, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 205, 459, (char*)"-");
-      DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, Color_White, Color_Bg_Black, 2, 2, 205, 459, z * 100);
+      DWIN_Draw_String(false, true, DWIN_FONT_MENU, GetColor(8,eeprom_settings.coordinates_text), Color_Bg_Black, 205, 459, (char*)"-");
+      DWIN_Draw_FloatValue(true, true, 0, DWIN_FONT_MENU, GetColor(8,eeprom_settings.coordinates_text), Color_Bg_Black, 2, 2, 205, 459, z * 100);
     }
   }
   DWIN_UpdateLCD();
@@ -874,12 +958,12 @@ void CrealityDWINClass::Update_Status_Bar() {
     if (process == Print) {
       DWIN_Draw_Rectangle(1, Color_Grey, 8, 214, DWIN_WIDTH-8, 238);
       const int8_t npos = (DWIN_WIDTH - 30 * MENU_CHR_W) / 2;
-      DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Green, Color_Bg_Black, npos, 219, dispmsg);
+      DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(6,eeprom_settings.status_bar_text), Color_Bg_Black, npos, 219, dispmsg);
     }
     else {
       DWIN_Draw_Rectangle(1, Color_Bg_Black, 8, 352, DWIN_WIDTH-8, 376);
       const int8_t npos = (DWIN_WIDTH - 30 * MENU_CHR_W) / 2;
-      DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Green, Color_Bg_Black, npos, 357, dispmsg);
+      DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(6,eeprom_settings.status_bar_text), Color_Bg_Black, npos, 357, dispmsg);
     }
     if (-pos >= 30)
       msgscrl = 0;
@@ -891,12 +975,12 @@ void CrealityDWINClass::Update_Status_Bar() {
       if (process == Print) {
         DWIN_Draw_Rectangle(1, Color_Grey, 8, 214, DWIN_WIDTH-8, 238);
         const int8_t npos = (DWIN_WIDTH - strlen(statusmsg) * MENU_CHR_W) / 2;
-        DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Green, Color_Bg_Black, npos, 219, statusmsg);
+        DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(6,eeprom_settings.status_bar_text), Color_Bg_Black, npos, 219, statusmsg);
       }
       else {
         DWIN_Draw_Rectangle(1, Color_Bg_Black, 8, 352, DWIN_WIDTH-8, 376);
         const int8_t npos = (DWIN_WIDTH - strlen(statusmsg) * MENU_CHR_W) / 2;
-        DWIN_Draw_String(false, false, DWIN_FONT_MENU, Color_Green, Color_Bg_Black, npos, 357, statusmsg);
+        DWIN_Draw_String(false, false, DWIN_FONT_MENU, GetColor(6,eeprom_settings.status_bar_text), Color_Bg_Black, npos, 357, statusmsg);
       }
     }
   }
@@ -2425,7 +2509,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define ADVANCED_FILSENSORDISTANCE (ADVANCED_FILSENSORENABLED + ENABLED(HAS_FILAMENT_RUNOUT_DISTANCE))
       #define ADVANCED_POWER_LOSS (ADVANCED_FILSENSORDISTANCE + ENABLED(POWER_LOSS_RECOVERY))
       #define ADVANCED_TIME_FORMAT (ADVANCED_POWER_LOSS + 1)
-      #define ADVANCED_TOTAL ADVANCED_TIME_FORMAT
+      #define ADVANCED_COLOR_THEMES (ADVANCED_TIME_FORMAT + 1)
+      #define ADVANCED_TOTAL ADVANCED_COLOR_THEMES
 
       switch (item) {
         case ADVANCED_BACK:
@@ -2542,6 +2627,14 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Checkbox(row, eeprom_settings.time_format_textual);
           }
           break;
+        case ADVANCED_COLOR_THEMES:
+        if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"UI Color Settings", NULL, true);
+          }
+          else {
+            Draw_Menu(UIColorSettings);
+          }
+        break;  
       }
       break;
     case InfoMain:
@@ -3442,7 +3535,272 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
         }
         break;
+
+    case UIColorSettings:
+
+        #define UICOLORSETTINGS_BACK 0
+        #define UICOLORSETTINGS_CURSOR_COLOR (UICOLORSETTINGS_BACK + 1)
+        #define UICOLORSETTINGS_SPLIT_LINE_COLOR (UICOLORSETTINGS_CURSOR_COLOR + 1)
+        #define UICOLORSETTINGS_HIGHLIGHT_BORDER_COLOR (UICOLORSETTINGS_SPLIT_LINE_COLOR + 1)
+        #define UICOLORSETTINGS_PROGRESS_TEXT_COLOR (UICOLORSETTINGS_HIGHLIGHT_BORDER_COLOR + 1)
+        #define UICOLORSETTINGS_PROGRESS_REMAIN_COLOR (UICOLORSETTINGS_PROGRESS_TEXT_COLOR + 1)
+        #define UICOLORSETTINGS_PROGRESS_ELAPSED_COLOR (UICOLORSETTINGS_PROGRESS_REMAIN_COLOR + 1)
+        #define UICOLORSETTINGS_PROGRESS_STATUS_BAR_COLOR (UICOLORSETTINGS_PROGRESS_ELAPSED_COLOR + 1)
+        #define UICOLORSETTINGS_PROGRESS_STATUS_AREA_COLOR (UICOLORSETTINGS_PROGRESS_STATUS_BAR_COLOR + 1)
+        #define UICOLORSETTINGS_PROGRESS_STATUS_AREA_COORDINATES_COLOR (UICOLORSETTINGS_PROGRESS_STATUS_AREA_COLOR + 1)
+
+        #define UICOLORSETTINGS_TOTAL UICOLORSETTINGS_PROGRESS_STATUS_AREA_COORDINATES_COLOR
+
+        switch (item) {
+        case UICOLORSETTINGS_BACK:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+          }
+          else {
+            Draw_Menu(Advanced, ADVANCED_COLOR_THEMES);
+          }
+          break;
+        case UICOLORSETTINGS_CURSOR_COLOR:
+           if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"Cursor", NULL, true);
+          }
+          else {
+            Draw_Menu(ColorList);
+          }
+          break;
+        case UICOLORSETTINGS_SPLIT_LINE_COLOR:
+           if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"Menu Split Line", NULL, true);
+          }
+          else {
+            Draw_Menu(ColorList);
+          }
+          break;  
+          case UICOLORSETTINGS_HIGHLIGHT_BORDER_COLOR:
+           if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"Highlight Box", NULL, true);
+          }
+          else {
+            Draw_Menu(ColorList);
+          }
+          break; 
+          case UICOLORSETTINGS_PROGRESS_TEXT_COLOR:
+           if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"Progress Text", NULL, true);
+          }
+          else {
+            Draw_Menu(ColorList);
+          }
+          break;  
+          case UICOLORSETTINGS_PROGRESS_REMAIN_COLOR:
+           if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"Progress Remain Text", NULL, true);
+          }
+          else {
+            Draw_Menu(ColorList);
+          }
+          break;           
+          case UICOLORSETTINGS_PROGRESS_ELAPSED_COLOR:
+           if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"Progress Elapsed Text", NULL, true);
+          }
+          else {
+            Draw_Menu(ColorList);
+          }
+          break; 
+          case UICOLORSETTINGS_PROGRESS_STATUS_BAR_COLOR:
+           if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"Status Bar Text", NULL, true);
+          }
+          else {
+            Draw_Menu(ColorList);
+          }
+          break;  
+          case UICOLORSETTINGS_PROGRESS_STATUS_AREA_COLOR:
+           if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"Status Area Text", NULL, true);
+          }
+          else {
+            Draw_Menu(ColorList);
+          }
+          break;  
+          case UICOLORSETTINGS_PROGRESS_STATUS_AREA_COORDINATES_COLOR:
+           if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"Coordinates Text", NULL, true);
+          }
+          else {
+            Draw_Menu(ColorList);
+          }
+          break;                                       
+        }
+        break;    
+
+    case ColorList:
+        
+        #define UICOLORSETTINGS_COLOR_LIST_BACK 0
+        #define UICOLORSETTINGS_COLOR_LIST_WHITE (UICOLORSETTINGS_COLOR_LIST_BACK + 1)
+        #define UICOLORSETTINGS_COLOR_LIST_BLUE (UICOLORSETTINGS_COLOR_LIST_WHITE + 1)
+        #define UICOLORSETTINGS_COLOR_LIST_YELLOW (UICOLORSETTINGS_COLOR_LIST_BLUE + 1)
+        #define UICOLORSETTINGS_COLOR_LIST_RED (UICOLORSETTINGS_COLOR_LIST_YELLOW + 1)
+        #define UICOLORSETTINGS_COLOR_LIST_GREEN (UICOLORSETTINGS_COLOR_LIST_RED + 1)
+        #define UICOLORSETTINGS_COLOR_LIST_MAGENTA (UICOLORSETTINGS_COLOR_LIST_GREEN + 1)
+        #define UICOLORSETTINGS_COLOR_LIST_BROWN (UICOLORSETTINGS_COLOR_LIST_MAGENTA + 1)
+        #define UICOLORSETTINGS_COLOR_LIST_TOTAL UICOLORSETTINGS_COLOR_LIST_BROWN
+
+        switch (item){
+        case UICOLORSETTINGS_COLOR_LIST_BACK:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+          }
+          else {
+            Draw_Menu(UIColorSettings, last_selection);
+          }
+          break;
+        case UICOLORSETTINGS_COLOR_LIST_WHITE:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, Color_White, (char*)"White");
+            Draw_Checkbox(row, isChecked(last_selection, 1));
+          }
+          else {
+            setColor(last_selection, 1, row);
+          }
+          break;
+        case UICOLORSETTINGS_COLOR_LIST_BLUE:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, Color_Blue, (char*)"Blue");
+            Draw_Checkbox(row, isChecked(last_selection, 2));  
+          }
+          else {
+            setColor(last_selection, 2, row);
+          }
+          break;
+        case UICOLORSETTINGS_COLOR_LIST_YELLOW:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, Color_Yellow, (char*)"Yellow");
+            Draw_Checkbox(row, isChecked(last_selection, 3));  
+          }
+          else {
+            setColor(last_selection, 3, row);
+          }
+          break;
+        case UICOLORSETTINGS_COLOR_LIST_RED:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, Color_Red, (char*)"Red");
+            Draw_Checkbox(row, isChecked(last_selection, 4));   
+          }
+          else {
+            setColor(last_selection, 4, row);
+          }
+          break;
+        case UICOLORSETTINGS_COLOR_LIST_GREEN:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, Color_Green, (char*)"Green");
+            Draw_Checkbox(row, isChecked(last_selection, 5));   
+          }
+          else {
+            setColor(last_selection, 5, row);
+          }
+          break;  
+        case UICOLORSETTINGS_COLOR_LIST_MAGENTA:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, Color_Magenta, (char*)"Magenta");
+            Draw_Checkbox(row, isChecked(last_selection, 6));   
+          }
+          else {
+            setColor(last_selection, 6, row);
+          }
+          break;
+        case UICOLORSETTINGS_COLOR_LIST_BROWN:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_MaxSpeed, Color_Brown, (char*)"Brown");
+            Draw_Checkbox(row, isChecked(last_selection, 7));   
+          }
+          else {
+            setColor(last_selection, 7, row);
+          }          
+          break;                          
+
+        }
+        break; 
   }
+}
+
+bool CrealityDWINClass::isChecked(uint8_t selection, uint8_t color) {
+  switch (selection){
+    case 1: // Cursor
+      return (eeprom_settings.cursor_color == color)?1:0;
+      break;
+    case 2: // Menu Split Line
+      return (eeprom_settings.menu_split_line == color)?1:0;
+      break;
+    case 3: // Highlight Box
+      return (eeprom_settings.highlight_box == color)?1:0;
+      break;
+    case 4: // Progress Text
+      return (eeprom_settings.progress_text == color)?1:0;
+      break;  
+    case 5: // Progress Remain Text
+      return (eeprom_settings.progress_remain_text == color)?1:0;
+      break;  
+    case 6: // Progress Elapsed Text
+      return (eeprom_settings.progress_elapsed_text == color)?1:0;
+      break; 
+    case 7: // Status Bar Text
+      return (eeprom_settings.status_bar_text == color)?1:0;
+      break;  
+    case 8: // Status Area Text
+      return (eeprom_settings.status_area_text == color)?1:0;
+      break; 
+    case 9: // Coordinates Text
+      return (eeprom_settings.coordinates_text == color)?1:0;
+      break;      
+    default:
+      return 0;                                   
+  }
+
+}
+
+inline void CrealityDWINClass::setColor(uint8_t selection, uint8_t color, uint8_t row) {
+  switch (selection){
+    case 1: // Cursor
+      eeprom_settings.cursor_color = color;
+      Draw_Checkbox(row, isChecked(selection, color)); 
+      break;
+    case 2: // Menu Split Line,
+      eeprom_settings.menu_split_line = color;
+      Draw_Checkbox(row, isChecked(selection, color));
+      break;
+    case 3: // Highlight Box
+      eeprom_settings.highlight_box = color;
+      Draw_Checkbox(row, isChecked(selection, color));
+      break;
+    case 4: // Progress Text
+      eeprom_settings.progress_text = color;
+      Draw_Checkbox(row, isChecked(selection, color));
+      break;  
+    case 5: // Progress Remain Text
+      eeprom_settings.progress_remain_text = color;
+      Draw_Checkbox(row, isChecked(selection, color));
+      break;  
+    case 6: // Progress Elapsed Text
+      eeprom_settings.progress_elapsed_text = color;
+      Draw_Checkbox(row, isChecked(selection, color));
+      break; 
+    case 7: // Status Bar Text
+      eeprom_settings.status_bar_text = color;
+      Draw_Checkbox(row, isChecked(selection, color));
+      break;  
+    case 8: // Status Area Text
+      eeprom_settings.status_area_text = color;
+      Draw_Checkbox(row, isChecked(selection, color));
+      break; 
+    case 9: // Coordinates Text
+      eeprom_settings.coordinates_text = color;
+      Draw_Checkbox(row, isChecked(selection, color));
+      break;  
+  }
+  Redraw_Menu();
+
 }
 
 char* CrealityDWINClass::Get_Menu_Title(uint8_t menu) {
@@ -3509,6 +3867,38 @@ char* CrealityDWINClass::Get_Menu_Title(uint8_t menu) {
       return (char*)"Steps/mm";
     case Advanced:
       return (char*)"Advanced Settings";
+    case UIColorSettings:
+      return (char*)"UI Color Settings";
+    case ColorList:
+      switch (last_selection){
+        case 1:
+          return (char*)"Cursor";
+          break;
+        case 2:
+          return (char*)"Menu Split Line";
+          break;  
+        case 3:
+          return (char*)"HighLight Box";
+          break;   
+        case 4:
+          return (char*)"Progress Text";
+          break;
+        case 5:
+          return (char*)"Progress Remain Text";
+          break; 
+        case 6:
+          return (char*)"Progress Elapsed Text";
+          break;                                           
+        case 7:
+          return (char*)"Status Bar Text";
+          break;
+        case 8:
+          return (char*)"Status Area Text";
+          break;  
+        case 9:
+          return (char*)"Coordinates Text";
+          break;         
+      }
     case Info:
       return (char*)"Info";
     case InfoMain:
@@ -3623,6 +4013,10 @@ int CrealityDWINClass::Get_Menu_Size(uint8_t menu) {
       return TUNE_TOTAL;
     case PreheatHotend:
       return PREHEATHOTEND_TOTAL;
+    case UIColorSettings:
+      return UICOLORSETTINGS_TOTAL;  
+    case ColorList:
+      return UICOLORSETTINGS_COLOR_LIST_TOTAL;  
   }
   return 0;
 }
@@ -3779,7 +4173,7 @@ inline void CrealityDWINClass::Menu_Control() {
       DWIN_Frame_AreaMove(1, 2, MLINE, Color_Bg_Black, 0, 31, DWIN_WIDTH, 349);
       Menu_Item_Handler(active_menu, selection);
     }
-    DWIN_Draw_Rectangle(1, Rectangle_Color, 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
+    DWIN_Draw_Rectangle(1, GetColor(0, eeprom_settings.cursor_color), 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
   }
   else if (encoder_diffState == ENCODER_DIFF_CCW && selection > 0) {
     DWIN_Draw_Rectangle(1, Color_Bg_Black, 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
@@ -3789,7 +4183,7 @@ inline void CrealityDWINClass::Menu_Control() {
       DWIN_Frame_AreaMove(1, 3, MLINE, Color_Bg_Black, 0, 31, DWIN_WIDTH, 349);
       Menu_Item_Handler(active_menu, selection);
     }
-    DWIN_Draw_Rectangle(1, Rectangle_Color, 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
+    DWIN_Draw_Rectangle(1, GetColor(0, eeprom_settings.cursor_color), 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
   }
   else if (encoder_diffState == ENCODER_DIFF_ENTER)
     Menu_Item_Handler(active_menu, selection, false);
@@ -3910,7 +4304,7 @@ inline void CrealityDWINClass::File_Control() {
       DWIN_Frame_AreaMove(1, 2, MLINE, Color_Bg_Black, 0, 31, DWIN_WIDTH, 349);
       Draw_SD_Item(selection, selection-scrollpos);
     }
-    DWIN_Draw_Rectangle(1, Rectangle_Color, 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
+    DWIN_Draw_Rectangle(1, GetColor(0, eeprom_settings.cursor_color), 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
   }
   else if (encoder_diffState == ENCODER_DIFF_CCW && selection > 0) {
     DWIN_Draw_Rectangle(1, Color_Bg_Black, 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
@@ -3923,7 +4317,7 @@ inline void CrealityDWINClass::File_Control() {
       DWIN_Frame_AreaMove(1, 3, MLINE, Color_Bg_Black, 0, 31, DWIN_WIDTH, 349);
       Draw_SD_Item(selection, selection-scrollpos);
     }
-    DWIN_Draw_Rectangle(1, Rectangle_Color, 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
+    DWIN_Draw_Rectangle(1, GetColor(0, eeprom_settings.cursor_color), 0, MBASE(selection-scrollpos) - 18, 14, MBASE(selection-scrollpos) + 33);
   }
   else if (encoder_diffState == ENCODER_DIFF_ENTER) {
     if (selection == 0) {
