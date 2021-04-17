@@ -55,7 +55,7 @@ ENCODER_Rate EncoderRate;
 void Encoder_tick() {
   #if PIN_EXISTS(BEEPER)
     WRITE(BEEPER_PIN, HIGH);
-    delay(1);
+    delay(10);
     WRITE(BEEPER_PIN, LOW);
   #endif
 }
