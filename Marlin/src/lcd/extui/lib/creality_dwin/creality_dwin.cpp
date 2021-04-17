@@ -3878,7 +3878,7 @@ void CrealityDWINClass::Confirm_Handler(const char * const msg) {
   else if (strcmp_P(msg, (char*)"Temp too high") == 0) {
     Draw_Popup((char*)"PID Autotune failed", (char*)"Temp too high!", (char*)"", Confirm);
   }
-  else if (strcmp_P(msg, (char*)"PID Timout") == 0) {
+  else if (strcmp_P(msg, (char*)"PID Timeout") == 0) {
     Draw_Popup((char*)"PID Autotune failed", (char*)"Timeout!", (char*)"", Confirm);
   }
   else if (strcmp_P(msg, (char*)"PID Done") == 0) {
