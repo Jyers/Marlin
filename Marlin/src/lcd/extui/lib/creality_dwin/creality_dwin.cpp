@@ -153,6 +153,7 @@ uint8_t last_process = Main;
 uint8_t popup;
 uint8_t last_popup;
 
+void (*funcpointer)();
 void *valuepointer;
 float tempvalue;
 float valuemin;
@@ -1620,9 +1621,9 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define CONTROL_BACK 0
       #define CONTROL_TEMP (CONTROL_BACK + 1)
       #define CONTROL_MOTION (CONTROL_TEMP + 1)
-      #define CONTROL_ADVANCED (CONTROL_MOTION + 1)
-      #define CONTROL_BACKLIGHT (CONTROL_ADVANCED + 1)
-      #define CONTROL_SAVE (CONTROL_BACKLIGHT + ENABLED(EEPROM_SETTINGS))
+      #define CONTROL_VISUAL (CONTROL_MOTION + 1)
+      #define CONTROL_ADVANCED (CONTROL_VISUAL + 1)
+      #define CONTROL_SAVE (CONTROL_ADVANCED + ENABLED(EEPROM_SETTINGS))
       #define CONTROL_RESTORE (CONTROL_SAVE + ENABLED(EEPROM_SETTINGS))
       #define CONTROL_RESET (CONTROL_RESTORE + ENABLED(EEPROM_SETTINGS))
       #define CONTROL_INFO (CONTROL_RESET + 1)
@@ -1653,20 +1654,20 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu(Motion);
           }
           break;
+        case CONTROL_VISUAL:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_PrintSize, (char*)"Visual", NULL, true);
+          }
+          else {
+            Draw_Menu(Visual);
+          }
+          break;
         case CONTROL_ADVANCED:
           if (draw) {
             Draw_Menu_Item(row, ICON_Version, (char*)"Advanced", NULL, true);
           }
           else {
             Draw_Menu(Advanced);
-          }
-          break;
-        case CONTROL_BACKLIGHT:
-          if (draw) {
-            Draw_Menu_Item(row, ICON_Brightness, (char*)"Display Off");
-          }
-          else {
-            ui.set_brightness(0);
           }
           break;
         #if ENABLED(EEPROM_SETTINGS)
@@ -1765,7 +1766,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #if ANY(HAS_HOTEND, HAS_HEATED_BED)
           case TEMP_PID:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Step, (char*)"PID Autotune", NULL, true);
+              Draw_Menu_Item(row, ICON_Step, (char*)"PID", NULL, true);
             }
             else {
               Draw_Menu(PID);
@@ -1830,13 +1831,9 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #define PID_BACK 0
         #define PID_HOTEND (PID_BACK + ENABLED(HAS_HOTEND))
         #define PID_BED (PID_HOTEND + ENABLED(HAS_HEATED_BED))
-        #define PID_E_TEMP (PID_BED + ENABLED(HAS_HOTEND))
-        #define PID_BED_TEMP (PID_E_TEMP + ENABLED(HAS_HEATED_BED))
-        #define PID_CYCLES (PID_BED_TEMP + 1)
+        #define PID_CYCLES (PID_BED + 1)
         #define PID_TOTAL PID_CYCLES
 
-        static uint16_t PID_e_temp = 180;
-        static uint16_t PID_bed_temp = 50;
         static uint8_t PID_cycles = 5;
 
         switch (item) {
@@ -1851,46 +1848,20 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           #if HAS_HOTEND
             case PID_HOTEND:
               if (draw) {
-                Draw_Menu_Item(row, ICON_HotendTemp, (char*)"Hotend");
+                Draw_Menu_Item(row, ICON_HotendTemp, (char*)"Hotend", NULL, true);
               }
               else {
-                char buf[30];
-                sprintf(buf, "M303 E0 C%i S%i U1", PID_cycles, PID_e_temp);
-                gcode.process_subcommands_now_P(buf);
+                Draw_Menu(HotendPID);
               }
               break;
           #endif
           #if HAS_HEATED_BED
             case PID_BED:
               if (draw) {
-                Draw_Menu_Item(row, ICON_BedTemp, (char*)"Bed");
+                Draw_Menu_Item(row, ICON_BedTemp, (char*)"Bed", NULL, true);
               }
               else {
-                char buf[30];
-                sprintf(buf, "M303 E-1 C%i S%i U1", PID_cycles, PID_bed_temp);
-                gcode.process_subcommands_now_P(buf);
-              }
-              break;
-          #endif
-          #if HAS_HOTEND
-            case PID_E_TEMP:
-              if (draw) {
-                Draw_Menu_Item(row, ICON_SetEndTemp, (char*)"Hotend Temp");
-                Draw_Float(PID_e_temp, row, false, 1);
-              }
-              else {
-                Modify_Value(PID_e_temp, MIN_E_TEMP, MAX_E_TEMP, 1);
-              }
-              break;
-          #endif
-          #if HAS_HEATED_BED
-            case PID_BED_TEMP:
-              if (draw) {
-                Draw_Menu_Item(row, ICON_SetBedTemp, (char*)"Bed Temp");
-                Draw_Float(PID_bed_temp, row, false, 1);
-              }
-              else {
-                Modify_Value(PID_bed_temp, MIN_BED_TEMP, MAX_BED_TEMP, 1);
+                Draw_Menu(BedPID);
               }
               break;
           #endif
@@ -1901,6 +1872,150 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             }
             else {
               Modify_Value(PID_cycles, 3, 50, 1);
+            }
+            break;
+        }
+        break;
+    #endif
+    #if HAS_HOTEND
+      case HotendPID:
+
+        #define HOTENDPID_BACK 0
+        #define HOTENDPID_TUNE (HOTENDPID_BACK + 1)
+        #define HOTENDPID_TEMP (HOTENDPID_TUNE + 1)
+        #define HOTENDPID_KP (HOTENDPID_TEMP + 1)
+        #define HOTENDPID_KI (HOTENDPID_KP + 1)
+        #define HOTENDPID_KD (HOTENDPID_KI + 1)
+        #define HOTENDPID_TOTAL HOTENDPID_KD
+
+        static uint16_t PID_e_temp = 180;
+
+        switch (item) {
+          case HOTENDPID_BACK:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+            }
+            else {
+              Draw_Menu(PID, PID_HOTEND);
+            }
+            break;
+          case HOTENDPID_TUNE:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_HotendTemp, (char*)"Autotune");
+            }
+            else {
+              Popup_Handler(PIDWait);
+              char buf[30];
+              sprintf(buf, "M303 E0 C%i S%i U1", PID_cycles, PID_e_temp);
+              gcode.process_subcommands_now_P(buf);
+            }
+            break;
+          case HOTENDPID_TEMP:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Temperature, (char*)"Temperature");
+              Draw_Float(PID_e_temp, row, false, 1);
+            }
+            else {
+              Modify_Value(PID_e_temp, MIN_E_TEMP, MAX_E_TEMP, 1);
+            }
+            break;
+          case HOTENDPID_KP:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Version, (char*)"Kp Value");
+              Draw_Float(thermalManager.temp_hotend[0].pid.Kp, row, false, 100);
+            }
+            else {
+              Modify_Value(thermalManager.temp_hotend[0].pid.Kp, 0, 5000, 100, thermalManager.updatePID);
+            }
+            break;
+          case HOTENDPID_KI:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Version, (char*)"Ki Value");
+              Draw_Float(unscalePID_i(thermalManager.temp_hotend[0].pid.Ki), row, false, 100);
+            }
+            else {
+              Modify_Value(thermalManager.temp_hotend[0].pid.Ki, 0, 5000, 100, thermalManager.updatePID);
+            }
+            break;
+          case HOTENDPID_KD:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Version, (char*)"Kd Value");
+              Draw_Float(unscalePID_d(thermalManager.temp_hotend[0].pid.Kd), row, false, 100);
+            }
+            else {
+              Modify_Value(thermalManager.temp_hotend[0].pid.Kd, 0, 5000, 100, thermalManager.updatePID);
+            }
+            break;
+        }
+        break;
+    #endif
+    #if HAS_HEATED_BED
+      case BedPID:
+
+        #define BEDPID_BACK 0
+        #define BEDPID_TUNE (BEDPID_BACK + 1)
+        #define BEDPID_TEMP (BEDPID_TUNE + 1)
+        #define BEDPID_KP (BEDPID_TEMP + 1)
+        #define BEDPID_KI (BEDPID_KP + 1)
+        #define BEDPID_KD (BEDPID_KI + 1)
+        #define BEDPID_TOTAL BEDPID_KD
+
+        static uint16_t PID_bed_temp = 60;
+
+        switch (item) {
+          case BEDPID_BACK:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+            }
+            else {
+              Draw_Menu(PID, PID_BED);
+            }
+            break;
+          case BEDPID_TUNE:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_HotendTemp, (char*)"Autotune");
+            }
+            else {
+              Popup_Handler(PIDWait);
+              char buf[30];
+              sprintf(buf, "M303 E-1 C%i S%i U1", PID_cycles, PID_bed_temp);
+              gcode.process_subcommands_now_P(buf);
+            }
+            break;
+          case BEDPID_TEMP:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Temperature, (char*)"Temperature");
+              Draw_Float(PID_bed_temp, row, false, 1);
+            }
+            else {
+              Modify_Value(PID_bed_temp, MIN_BED_TEMP, MAX_BED_TEMP, 1);
+            }
+            break;
+          case BEDPID_KP:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Version, (char*)"Kp Value");
+              Draw_Float(thermalManager.temp_bed.pid.Kp, row, false, 100);
+            }
+            else {
+              Modify_Value(thermalManager.temp_bed.pid.Kp, 0, 5000, 100, thermalManager.updatePID);
+            }
+            break;
+          case BEDPID_KI:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Version, (char*)"Ki Value");
+              Draw_Float(unscalePID_i(thermalManager.temp_bed.pid.Ki), row, false, 100);
+            }
+            else {
+              Modify_Value(thermalManager.temp_bed.pid.Ki, 0, 5000, 100, thermalManager.updatePID);
+            }
+            break;
+          case BEDPID_KD:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Version, (char*)"Kd Value");
+              Draw_Float(unscalePID_d(thermalManager.temp_bed.pid.Kd), row, false, 100);
+            }
+            else {
+              Modify_Value(thermalManager.temp_bed.pid.Kd, 0, 5000, 100, thermalManager.updatePID);
             }
             break;
         }
@@ -2476,128 +2591,43 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #endif
       }
       break;
-    case Advanced:
 
-      #define ADVANCED_BACK 0
-      #define ADVANCED_BRIGHTNESS (ADVANCED_BACK + 1)
-      #define ADVANCED_XOFFSET (ADVANCED_BRIGHTNESS + ENABLED(HAS_BED_PROBE))
-      #define ADVANCED_YOFFSET (ADVANCED_XOFFSET + ENABLED(HAS_BED_PROBE))
-      #define ADVANCED_LOAD (ADVANCED_YOFFSET + ENABLED(ADVANCED_PAUSE_FEATURE))
-      #define ADVANCED_UNLOAD (ADVANCED_LOAD + ENABLED(ADVANCED_PAUSE_FEATURE))
-      #define ADVANCED_COLD_EXTRUDE  (ADVANCED_UNLOAD + ENABLED(PREVENT_COLD_EXTRUSION))
-      #define ADVANCED_FILSENSORENABLED (ADVANCED_COLD_EXTRUDE + ENABLED(FILAMENT_RUNOUT_SENSOR))
-      #define ADVANCED_FILSENSORDISTANCE (ADVANCED_FILSENSORENABLED + ENABLED(HAS_FILAMENT_RUNOUT_DISTANCE))
-      #define ADVANCED_POWER_LOSS (ADVANCED_FILSENSORDISTANCE + ENABLED(POWER_LOSS_RECOVERY))
-      #define ADVANCED_TIME_FORMAT (ADVANCED_POWER_LOSS + 1)
-      #define ADVANCED_COLOR_THEMES (ADVANCED_TIME_FORMAT + 1)
-      #define ADVANCED_TOTAL ADVANCED_COLOR_THEMES
+    case Visual:
+
+      #define VISUAL_BACK 0
+      #define VISUAL_BACKLIGHT (VISUAL_BACK + 1)
+      #define VISUAL_BRIGHTNESS (VISUAL_BACKLIGHT + 1)
+      #define VISUAL_TIME_FORMAT (VISUAL_BRIGHTNESS + 1)
+      #define VISUAL_COLOR_THEMES (VISUAL_TIME_FORMAT + 1)
+      #define VISUAL_TOTAL VISUAL_COLOR_THEMES
 
       switch (item) {
-        case ADVANCED_BACK:
+        case VISUAL_BACK:
           if (draw) {
             Draw_Menu_Item(row, ICON_Back, (char*)"Back");
           }
           else {
-            Draw_Menu(Control, CONTROL_ADVANCED);
+            Draw_Menu(Control, CONTROL_VISUAL);
           }
           break;
-        case ADVANCED_BRIGHTNESS:
+        case VISUAL_BACKLIGHT:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_Brightness, (char*)"Display Off");
+          }
+          else {
+            ui.set_brightness(0);
+          }
+          break;
+        case VISUAL_BRIGHTNESS:
           if (draw) {
             Draw_Menu_Item(row, ICON_Brightness, (char*)"LCD Brightness");
             Draw_Float(ui.brightness, row, false, 1);
           }
           else {
-            Modify_Value(ui.brightness, MIN_LCD_BRIGHTNESS, MAX_LCD_BRIGHTNESS, 1);
+            Modify_Value(ui.brightness, MIN_LCD_BRIGHTNESS, MAX_LCD_BRIGHTNESS, 1, ui.refresh_brightness);
           }
           break;
-        #if ENABLED(HAS_BED_PROBE)
-          case ADVANCED_XOFFSET:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_StepX, (char*)"Probe X Offset");
-              Draw_Float(probe.offset.x, row, false, 10);
-            }
-            else {
-              Modify_Value(probe.offset.x, -100, 100, 10);
-            }
-            break;
-          case ADVANCED_YOFFSET:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_StepY, (char*)"Probe Y Offset");
-              Draw_Float(probe.offset.y, row, false, 10);
-            }
-            else {
-              Modify_Value(probe.offset.y, -100, 100, 10);
-            }
-            break;
-        #endif
-        #if ENABLED(ADVANCED_PAUSE_FEATURE)
-          case ADVANCED_LOAD:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_WriteEEPROM, (char*)"Load Length");
-              Draw_Float(fc_settings[0].load_length, row, false, 1);
-            }
-            else {
-              Modify_Value(fc_settings[0].load_length, 0, EXTRUDE_MAXLENGTH, 1);
-            }
-            break;
-          case ADVANCED_UNLOAD:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Unload Length");
-              Draw_Float(fc_settings[0].unload_length, row, false, 1);
-            }
-            else {
-              Modify_Value(fc_settings[0].unload_length, 0, EXTRUDE_MAXLENGTH, 1);
-            }
-            break;
-        #endif
-        #if ENABLED(PREVENT_COLD_EXTRUSION)
-          case ADVANCED_COLD_EXTRUDE:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_Cool, (char*)"Min Extrusion T");
-              Draw_Float(thermalManager.extrude_min_temp, row, false, 1);
-            }
-            else {
-              Modify_Value(thermalManager.extrude_min_temp, 0, MAX_E_TEMP, 1);
-              thermalManager.allow_cold_extrude = (thermalManager.extrude_min_temp == 0);
-            }
-            break;
-        #endif
-        #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-          case ADVANCED_FILSENSORENABLED:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor");
-              Draw_Checkbox(row, ExtUI::getFilamentRunoutEnabled());
-            }
-            else {
-              ExtUI::setFilamentRunoutEnabled(!ExtUI::getFilamentRunoutEnabled());
-              Draw_Checkbox(row, ExtUI::getFilamentRunoutEnabled());
-            }
-            break;
-          #if ENABLED(HAS_FILAMENT_RUNOUT_DISTANCE)
-            case ADVANCED_FILSENSORDISTANCE:
-              if (draw) {
-                Draw_Menu_Item(row, ICON_MaxAccE, (char*)"Runout Distance");
-                Draw_Float(runout.runout_distance(), row, false, 10);
-              }
-              else {
-                Modify_Value(runout.runout_distance(), 0, 999, 10);
-              }
-              break;
-          #endif
-        #endif
-        #if ENABLED(POWER_LOSS_RECOVERY)
-          case ADVANCED_POWER_LOSS:
-            if (draw) {
-              Draw_Menu_Item(row, ICON_Motion, (char*)"Power-loss recovery");
-              Draw_Checkbox(row, recovery.enabled);
-            }
-            else {
-              recovery.enable(!recovery.enabled);
-              Draw_Checkbox(row, recovery.enabled);
-            }
-            break;
-        #endif
-        case ADVANCED_TIME_FORMAT:
+        case VISUAL_TIME_FORMAT:
           if (draw) {
             Draw_Menu_Item(row, ICON_PrintTime, (char*)"Progress as __h__m");
             Draw_Checkbox(row, eeprom_settings.time_format_textual);
@@ -2607,7 +2637,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Checkbox(row, eeprom_settings.time_format_textual);
           }
           break;
-        case ADVANCED_COLOR_THEMES:
+        case VISUAL_COLOR_THEMES:
         if (draw) {
             Draw_Menu_Item(row, ICON_MaxSpeed, (char*)"UI Color Settings", NULL, true);
           }
@@ -2617,6 +2647,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         break;  
       }
       break;
+
 
     case ColorSettings:
 
@@ -2640,7 +2671,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu_Item(row, ICON_Back, (char*)"Back");
           }
           else {
-            Draw_Menu(Advanced, ADVANCED_COLOR_THEMES);
+            Draw_Menu(Visual, VISUAL_COLOR_THEMES);
           }
           break;
         case COLORSETTINGS_CURSOR:
@@ -2744,6 +2775,119 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           break;                                              
         }
         break; 
+
+
+    case Advanced:
+
+      #define ADVANCED_BACK 0
+      #define ADVANCED_XOFFSET (ADVANCED_BACK + ENABLED(HAS_BED_PROBE))
+      #define ADVANCED_YOFFSET (ADVANCED_XOFFSET + ENABLED(HAS_BED_PROBE))
+      #define ADVANCED_LOAD (ADVANCED_YOFFSET + ENABLED(ADVANCED_PAUSE_FEATURE))
+      #define ADVANCED_UNLOAD (ADVANCED_LOAD + ENABLED(ADVANCED_PAUSE_FEATURE))
+      #define ADVANCED_COLD_EXTRUDE  (ADVANCED_UNLOAD + ENABLED(PREVENT_COLD_EXTRUSION))
+      #define ADVANCED_FILSENSORENABLED (ADVANCED_COLD_EXTRUDE + ENABLED(FILAMENT_RUNOUT_SENSOR))
+      #define ADVANCED_FILSENSORDISTANCE (ADVANCED_FILSENSORENABLED + ENABLED(HAS_FILAMENT_RUNOUT_DISTANCE))
+      #define ADVANCED_POWER_LOSS (ADVANCED_FILSENSORDISTANCE + ENABLED(POWER_LOSS_RECOVERY))
+      #define ADVANCED_TOTAL ADVANCED_POWER_LOSS
+
+      switch (item) {
+        case ADVANCED_BACK:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+          }
+          else {
+            Draw_Menu(Control, CONTROL_ADVANCED);
+          }
+          break;
+        #if ENABLED(HAS_BED_PROBE)
+          case ADVANCED_XOFFSET:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_StepX, (char*)"Probe X Offset");
+              Draw_Float(probe.offset.x, row, false, 10);
+            }
+            else {
+              Modify_Value(probe.offset.x, -100, 100, 10);
+            }
+            break;
+          case ADVANCED_YOFFSET:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_StepY, (char*)"Probe Y Offset");
+              Draw_Float(probe.offset.y, row, false, 10);
+            }
+            else {
+              Modify_Value(probe.offset.y, -100, 100, 10);
+            }
+            break;
+        #endif
+        #if ENABLED(ADVANCED_PAUSE_FEATURE)
+          case ADVANCED_LOAD:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_WriteEEPROM, (char*)"Load Length");
+              Draw_Float(fc_settings[0].load_length, row, false, 1);
+            }
+            else {
+              Modify_Value(fc_settings[0].load_length, 0, EXTRUDE_MAXLENGTH, 1);
+            }
+            break;
+          case ADVANCED_UNLOAD:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_ReadEEPROM, (char*)"Unload Length");
+              Draw_Float(fc_settings[0].unload_length, row, false, 1);
+            }
+            else {
+              Modify_Value(fc_settings[0].unload_length, 0, EXTRUDE_MAXLENGTH, 1);
+            }
+            break;
+        #endif
+        #if ENABLED(PREVENT_COLD_EXTRUSION)
+          case ADVANCED_COLD_EXTRUDE:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Cool, (char*)"Min Extrusion T");
+              Draw_Float(thermalManager.extrude_min_temp, row, false, 1);
+            }
+            else {
+              Modify_Value(thermalManager.extrude_min_temp, 0, MAX_E_TEMP, 1);
+              thermalManager.allow_cold_extrude = (thermalManager.extrude_min_temp == 0);
+            }
+            break;
+        #endif
+        #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+          case ADVANCED_FILSENSORENABLED:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Extruder, (char*)"Filament Sensor");
+              Draw_Checkbox(row, ExtUI::getFilamentRunoutEnabled());
+            }
+            else {
+              ExtUI::setFilamentRunoutEnabled(!ExtUI::getFilamentRunoutEnabled());
+              Draw_Checkbox(row, ExtUI::getFilamentRunoutEnabled());
+            }
+            break;
+          #if ENABLED(HAS_FILAMENT_RUNOUT_DISTANCE)
+            case ADVANCED_FILSENSORDISTANCE:
+              if (draw) {
+                Draw_Menu_Item(row, ICON_MaxAccE, (char*)"Runout Distance");
+                Draw_Float(runout.runout_distance(), row, false, 10);
+              }
+              else {
+                Modify_Value(runout.runout_distance(), 0, 999, 10);
+              }
+              break;
+          #endif
+        #endif
+        #if ENABLED(POWER_LOSS_RECOVERY)
+          case ADVANCED_POWER_LOSS:
+            if (draw) {
+              Draw_Menu_Item(row, ICON_Motion, (char*)"Power-loss recovery");
+              Draw_Checkbox(row, recovery.enabled);
+            }
+            else {
+              recovery.enable(!recovery.enabled);
+              Draw_Checkbox(row, recovery.enabled);
+            }
+            break;
+        #endif 
+      }
+      break;
 
     case InfoMain:
     case Info:
@@ -3507,7 +3651,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Float(ui.brightness, row, false, 1);
           }
           else {
-            Modify_Value(ui.brightness, MIN_LCD_BRIGHTNESS, MAX_LCD_BRIGHTNESS, 1);
+            Modify_Value(ui.brightness, MIN_LCD_BRIGHTNESS, MAX_LCD_BRIGHTNESS, 1, ui.refresh_brightness);
           }
           break;
       }
@@ -3674,7 +3818,15 @@ char* CrealityDWINClass::Get_Menu_Title(uint8_t menu) {
       return (char*)"Temperature";
     #if ANY(HAS_HOTEND, HAS_HEATED_BED)
       case PID:
-        return (char*)"PID Autotune";
+        return (char*)"PID Menu";
+    #endif
+    #if HAS_HOTEND
+      case HotendPID:
+        return (char*)"Hotend PID Settings";
+    #endif
+    #if HAS_HEATED_BED
+      case BedPID:
+        return (char*)"Bed PID Settings";
     #endif
     #if (PREHEAT_COUNT >= 1)
       case Preheat1:
@@ -3708,6 +3860,8 @@ char* CrealityDWINClass::Get_Menu_Title(uint8_t menu) {
     #endif
     case Steps:
       return (char*)"Steps/mm";
+    case Visual:
+      return (char*)"Visual Settings";
     case Advanced:
       return (char*)"Advanced Settings";
     case ColorSettings:
@@ -3768,6 +3922,14 @@ int CrealityDWINClass::Get_Menu_Size(uint8_t menu) {
       case PID:
         return PID_TOTAL;
     #endif
+    #if HAS_HOTEND
+      case HotendPID:
+        return HOTENDPID_TOTAL;
+    #endif
+    #if HAS_HEATED_BED
+      case BedPID:
+        return BEDPID_TOTAL;
+    #endif
     #if (PREHEAT_COUNT >= 1)
       case Preheat1:
         return PREHEAT1_TOTAL;
@@ -3800,6 +3962,8 @@ int CrealityDWINClass::Get_Menu_Size(uint8_t menu) {
     #endif
     case Steps:
       return STEPS_TOTAL;
+    case Visual:
+      return VISUAL_TOTAL;
     case Advanced:
       return ADVANCED_TOTAL;
     case Info:
@@ -3878,6 +4042,9 @@ void CrealityDWINClass::Popup_Handler(uint8_t popupid, bool option/*=false*/) {
       break;
     case Runout:
       Draw_Popup((char*)"Filament Runout", (char*)"", (char*)"", Wait, ICON_BLTouch);
+      break;
+    case PIDWait:
+      Draw_Popup((char*)"PID Autotune", (char*)"in process", (char*)"Please wait until done.", Wait, ICON_BLTouch);
       break;
   }
 }
@@ -4011,6 +4178,10 @@ inline void CrealityDWINClass::Value_Control() {
     tempvalue -= EncoderRate.encoderMoveValue;
   }
   else if (encoder_diffState == ENCODER_DIFF_ENTER) {
+    process = Menu;
+    EncoderRate.enabled = false;
+    Draw_Float(tempvalue/valueunit, selection-scrollpos, false, valueunit);
+    DWIN_UpdateLCD();
     if (active_menu == ZOffset && liveadjust) {
       planner.synchronize();
       current_position.z += (tempvalue/valueunit - zoffsetvalue);
@@ -4023,6 +4194,10 @@ inline void CrealityDWINClass::Value_Control() {
       sprintf(buf, "M290 Z%f", (tempvalue/valueunit - zoffsetvalue));
       gcode.process_subcommands_now_P(buf);
     }
+    if (valuepointer == &thermalManager.temp_hotend[0].pid.Ki || valuepointer == &thermalManager.temp_bed.pid.Ki) 
+      tempvalue = scalePID_i(tempvalue);
+    if (valuepointer == &thermalManager.temp_hotend[0].pid.Kd || valuepointer == &thermalManager.temp_bed.pid.Kd) 
+      tempvalue = scalePID_d(tempvalue);
     switch (valuetype) {
       case 0: *(float*)valuepointer = tempvalue/valueunit; break;
       case 1: *(uint8_t*)valuepointer = tempvalue/valueunit; break;
@@ -4030,10 +4205,6 @@ inline void CrealityDWINClass::Value_Control() {
       case 3: *(int16_t*)valuepointer = tempvalue/valueunit; break;
       case 4: *(uint32_t*)valuepointer = tempvalue/valueunit; break;
     }
-    process = Menu;
-    EncoderRate.enabled = false;
-    Draw_Float(tempvalue/valueunit, selection-scrollpos, false, valueunit);
-    DWIN_UpdateLCD();
     switch (active_menu) {
       case Move:
         planner.synchronize();
@@ -4050,12 +4221,10 @@ inline void CrealityDWINClass::Value_Control() {
           break;
       #endif
     }
-    if (valuepointer == &ui.brightness) {
-      ui.refresh_brightness();
-    }
-    else if (valuepointer == &planner.flow_percentage[0]) {
+    if (valuepointer == &planner.flow_percentage[0]) {
       planner.refresh_e_factor(0);
     }
+    if (funcpointer) funcpointer();
     return;
   }
   NOLESS(tempvalue, (valuemin * valueunit));
@@ -4374,10 +4543,17 @@ inline void CrealityDWINClass::Confirm_Control() {
             Draw_SD_List();
             break;
           case Wait:
-            if (last_popup == Runout)
-              Draw_Print_Screen();
-            else
-              Popup_Handler(last_popup);
+            switch (last_popup) {
+              case Runout:
+                Draw_Print_Screen();
+                break;
+              case PIDWait:
+                Redraw_Menu();
+                break;
+              default:
+                Popup_Handler(last_popup);
+                break;
+            }
             break;
         }
         wait_for_user = false;
@@ -4389,7 +4565,12 @@ inline void CrealityDWINClass::Confirm_Control() {
 /* In-Menu Value Modification */
 
 void CrealityDWINClass::Setup_Value(float value, float min, float max, float unit, uint8_t type) {
-  tempvalue = value * unit;
+  if (valuepointer == &thermalManager.temp_hotend[0].pid.Ki || valuepointer == &thermalManager.temp_bed.pid.Ki) 
+    tempvalue = unscalePID_i(value) * unit;
+  else if (valuepointer == &thermalManager.temp_hotend[0].pid.Kd || valuepointer == &thermalManager.temp_bed.pid.Kd) 
+    tempvalue = unscalePID_d(value) * unit;
+  else
+    tempvalue = value * unit;
   valuemin = min;
   valuemax = max;
   valueunit = unit;
@@ -4399,24 +4580,29 @@ void CrealityDWINClass::Setup_Value(float value, float min, float max, float uni
   Draw_Float(tempvalue/unit, selection-scrollpos, true, valueunit);
 }
 
-void CrealityDWINClass::Modify_Value(float &value, float min, float max, float unit) {
+void CrealityDWINClass::Modify_Value(float &value, float min, float max, float unit, void (*f)()/*=NULL*/) {
   valuepointer = &value;
+  funcpointer = f;
   Setup_Value((float)value, min, max, unit, 0);
 }
-void CrealityDWINClass::Modify_Value(uint8_t &value, float min, float max, float unit) {
+void CrealityDWINClass::Modify_Value(uint8_t &value, float min, float max, float unit, void (*f)()/*=NULL*/) {
   valuepointer = &value;
+  funcpointer = f;
   Setup_Value((float)value, min, max, unit, 1);
 }
-void CrealityDWINClass::Modify_Value(uint16_t &value, float min, float max, float unit) {
+void CrealityDWINClass::Modify_Value(uint16_t &value, float min, float max, float unit, void (*f)()/*=NULL*/) {
   valuepointer = &value;
+  funcpointer = f;
   Setup_Value((float)value, min, max, unit, 2);
 }
-void CrealityDWINClass::Modify_Value(int16_t &value, float min, float max, float unit) {
+void CrealityDWINClass::Modify_Value(int16_t &value, float min, float max, float unit, void (*f)()/*=NULL*/) {
   valuepointer = &value;
+  funcpointer = f;
   Setup_Value((float)value, min, max, unit, 3);
 }
-void CrealityDWINClass::Modify_Value(uint32_t &value, float min, float max, float unit) {
+void CrealityDWINClass::Modify_Value(uint32_t &value, float min, float max, float unit, void (*f)()/*=NULL*/) {
   valuepointer = &value;
+  funcpointer = f;
   Setup_Value((float)value, min, max, unit, 4);
 }
 
