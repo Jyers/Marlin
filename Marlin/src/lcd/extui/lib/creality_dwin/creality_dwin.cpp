@@ -89,7 +89,7 @@
 
 #define CORP_WEBSITE_E "github.com/Jyers"
 
-#define BUILD_NUMBER "1.3.0"
+#define BUILD_NUMBER "1.3.1"
 
 #define DWIN_FONT_MENU font8x16
 #define DWIN_FONT_STAT font10x20
@@ -105,6 +105,8 @@
   #define MAX_FAN_SPEED     255
   #define MIN_FAN_SPEED     0
 #endif
+
+#define MAX_XY_OFFSET 100
 
 #if HAS_ZOFFSET_ITEM
   #define MAX_Z_OFFSET 9.99
@@ -169,6 +171,7 @@ bool sdprint = false;
 
 int16_t pausetemp, pausebed, pausefan;
 
+bool livemove = false;
 bool liveadjust = false;
 bool bedonly = false;
 float zoffsetvalue = 0;
@@ -1114,7 +1117,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
       #define MOVE_Z (MOVE_Y + 1)
       #define MOVE_E (MOVE_Z + ENABLED(HAS_HOTEND))
       #define MOVE_P (MOVE_E + ENABLED(HAS_BED_PROBE))
-      #define MOVE_TOTAL MOVE_P
+      #define MOVE_LIVE (MOVE_P + 1)
+      #define MOVE_TOTAL MOVE_LIVE
 
       switch (item) {
         case MOVE_BACK:
@@ -1194,7 +1198,16 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             }
             break;
         #endif
-
+        case MOVE_LIVE:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_Axis, (char*)"Live Movement");
+            Draw_Checkbox(row, livemove);
+          }
+          else {
+            livemove = !livemove;
+            Draw_Checkbox(row, livemove);
+          }
+          break;
       }
       break;
     case ManualLevel:
@@ -1228,9 +1241,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X32.5 Y32.5"));
-            char buf[20];
-            sprintf(buf, "G0 F300 Z%f", mlev_z_pos);
+            char buf[80];
+            sprintf(buf, "G0 F4000\nG0 Z10\nG0 X%f Y%f\nG0 F300 Z%f", 32.5f, 32.5f, mlev_z_pos);
             gcode.process_subcommands_now_P(buf);
             planner.synchronize();
             Redraw_Menu();
@@ -1242,9 +1254,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X32.5 Y197.5"));
-            char buf[20];
-            sprintf(buf, "G0 F300 Z%f", mlev_z_pos);
+            char buf[80];
+            sprintf(buf, "G0 F4000\nG0 Z10\nG0 X%f Y%f\nG0 F300 Z%f", 32.5f, (Y_BED_SIZE + Y_MIN_POS) - 32.5f, mlev_z_pos);
             gcode.process_subcommands_now_P(buf);
             planner.synchronize();
             Redraw_Menu();
@@ -1256,9 +1267,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X197.5 Y197.5"));
-            char buf[20];
-            sprintf(buf, "G0 F300 Z%f", mlev_z_pos);
+            char buf[80];
+            sprintf(buf, "G0 F4000\nG0 Z10\nG0 X%f Y%f\nG0 F300 Z%f", (X_BED_SIZE + X_MIN_POS) - 32.5f, (Y_BED_SIZE + Y_MIN_POS) - 32.5f, mlev_z_pos);
             gcode.process_subcommands_now_P(buf);
             planner.synchronize();
             Redraw_Menu();
@@ -1270,9 +1280,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X197.5 Y32.5"));
-            char buf[20];
-            sprintf(buf, "G0 F300 Z%f", mlev_z_pos);
+            char buf[80];
+            sprintf(buf, "G0 F4000\nG0 Z10\nG0 X%f Y%f\nG0 F300 Z%f", (X_BED_SIZE + X_MIN_POS) - 32.5f, 32.5f, mlev_z_pos);
             gcode.process_subcommands_now_P(buf);
             planner.synchronize();
             Redraw_Menu();
@@ -1284,9 +1293,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Popup_Handler(MoveWait);
-            gcode.process_subcommands_now_P(PSTR("G0 F4000\nG0 Z10\nG0 X117.5 Y117.5"));
-            char buf[20];
-            sprintf(buf, "G0 F300 Z%f", mlev_z_pos);
+            char buf[80];
+            sprintf(buf, "G0 F4000\nG0 Z10\nG0 X%f Y%f\nG0 F300 Z%f", (X_BED_SIZE + X_MIN_POS)/2.0f, (Y_BED_SIZE + Y_MIN_POS)/2.0f, mlev_z_pos);
             gcode.process_subcommands_now_P(buf);
             planner.synchronize();
             Redraw_Menu();
@@ -2294,7 +2302,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
     case Motion:
 
       #define MOTION_BACK 0
-      #define MOTION_SPEED (MOTION_BACK + 1)
+      #define MOTION_HOMEOFFSETS (MOTION_BACK + 1)
+      #define MOTION_SPEED (MOTION_HOMEOFFSETS + 1)
       #define MOTION_ACCEL (MOTION_SPEED + 1)
       #define MOTION_JERK (MOTION_ACCEL + ENABLED(HAS_CLASSIC_JERK))
       #define MOTION_STEPS (MOTION_JERK + 1)
@@ -2308,6 +2317,14 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           }
           else {
             Draw_Menu(Control, CONTROL_MOTION);
+          }
+          break;
+        case MOTION_HOMEOFFSETS:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_SetHome, (char*)"Home Offsets", NULL, true);
+          }
+          else {
+            Draw_Menu(HomeOffsets);
           }
           break;
         case MOTION_SPEED:
@@ -2355,6 +2372,42 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             }
             break;
         #endif
+      }
+      break;
+    case HomeOffsets:
+
+      #define HOMEOFFSETS_BACK 0
+      #define HOMEOFFSETS_XOFFSET (HOMEOFFSETS_BACK + 1)
+      #define HOMEOFFSETS_YOFFSET (HOMEOFFSETS_XOFFSET + 1)
+      #define HOMEOFFSETS_TOTAL HOMEOFFSETS_YOFFSET
+
+      switch (item) {
+        case HOMEOFFSETS_BACK:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_Back, (char*)"Back");
+          }
+          else {
+            Draw_Menu(Motion, MOTION_HOMEOFFSETS);
+          }
+          break;
+        case HOMEOFFSETS_XOFFSET:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_StepX, (char*)"X Offset");
+            Draw_Float(home_offset.x, row, false, 100);
+          }
+          else {
+            Modify_Value(home_offset.x, -MAX_XY_OFFSET, MAX_XY_OFFSET, 100);
+          }
+          break;
+        case HOMEOFFSETS_YOFFSET:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_StepY, (char*)"Y Offset");
+            Draw_Float(home_offset.y, row, false, 100);
+          }
+          else {
+            Modify_Value(home_offset.y, -MAX_XY_OFFSET, MAX_XY_OFFSET, 100);
+          }
+          break;
       }
       break;
     case MaxSpeed:
@@ -2780,7 +2833,8 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
     case Advanced:
 
       #define ADVANCED_BACK 0
-      #define ADVANCED_XOFFSET (ADVANCED_BACK + ENABLED(HAS_BED_PROBE))
+      #define ADVANCED_BEEPER (ADVANCED_BACK + 1)
+      #define ADVANCED_XOFFSET (ADVANCED_BEEPER + ENABLED(HAS_BED_PROBE))
       #define ADVANCED_YOFFSET (ADVANCED_XOFFSET + ENABLED(HAS_BED_PROBE))
       #define ADVANCED_LOAD (ADVANCED_YOFFSET + ENABLED(ADVANCED_PAUSE_FEATURE))
       #define ADVANCED_UNLOAD (ADVANCED_LOAD + ENABLED(ADVANCED_PAUSE_FEATURE))
@@ -2799,6 +2853,16 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Menu(Control, CONTROL_ADVANCED);
           }
           break;
+        case ADVANCED_BEEPER:
+          if (draw) {
+            Draw_Menu_Item(row, ICON_Version, (char*)"LCD Beeper");
+            Draw_Checkbox(row, beeperenable);
+          }
+          else {
+            beeperenable = !beeperenable;
+            Draw_Checkbox(row, beeperenable);
+          }
+          break;
         #if ENABLED(HAS_BED_PROBE)
           case ADVANCED_XOFFSET:
             if (draw) {
@@ -2806,7 +2870,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Draw_Float(probe.offset.x, row, false, 10);
             }
             else {
-              Modify_Value(probe.offset.x, -100, 100, 10);
+              Modify_Value(probe.offset.x, -MAX_XY_OFFSET, MAX_XY_OFFSET, 10);
             }
             break;
           case ADVANCED_YOFFSET:
@@ -2815,7 +2879,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Draw_Float(probe.offset.y, row, false, 10);
             }
             else {
-              Modify_Value(probe.offset.y, -100, 100, 10);
+              Modify_Value(probe.offset.y, -MAX_XY_OFFSET, MAX_XY_OFFSET, 10);
             }
             break;
         #endif
@@ -3850,6 +3914,8 @@ char* CrealityDWINClass::Get_Menu_Title(uint8_t menu) {
     #endif
     case Motion:
       return (char*)"Motion Settings";
+    case HomeOffsets:
+      return (char*)"Home Offsets";
     case MaxSpeed:
       return (char*)"Max Speed";
     case MaxAcceleration:
@@ -3952,6 +4018,8 @@ int CrealityDWINClass::Get_Menu_Size(uint8_t menu) {
     #endif
     case Motion:
       return MOTION_TOTAL;
+    case HomeOffsets:
+      return HOMEOFFSETS_TOTAL;
     case MaxSpeed:
       return SPEED_TOTAL;
     case MaxAcceleration:
@@ -4231,6 +4299,10 @@ inline void CrealityDWINClass::Value_Control() {
   NOMORE(tempvalue, (valuemax * valueunit));
   Draw_Float(tempvalue/valueunit, selection-scrollpos, true, valueunit);
   DWIN_UpdateLCD();
+  if (active_menu == Move && livemove) {
+    *(float*)valuepointer = tempvalue/valueunit;
+    planner.buffer_line(current_position, manual_feedrate_mm_s[selection-1], active_extruder);
+  }
 }
 
 inline void CrealityDWINClass::Option_Control() {
@@ -4652,7 +4724,7 @@ void CrealityDWINClass::Stop_Print() {
   printing = false;
   thermalManager.zero_fan_speeds();
   thermalManager.disable_all_heaters();
-  ui.set_progress(100);
+  ui.set_progress(100 * (PROGRESS_SCALE));
   ui.set_remaining_time(0);
   Draw_Print_confirm();
 }
