@@ -211,7 +211,7 @@ enum menuID : uint8_t {
 #define font32x64 0x09
 
 enum colorID : uint8_t {
-  Default, White, Green, Blue, Magenta, Red, Yellow, Brown, Cyan, Black
+  Default, White, Green, Cyan, Blue, Magenta, Red, Orange, Yellow, Brown, Black
 };
 
 #define Custom_Colors       9
@@ -219,20 +219,22 @@ enum colorID : uint8_t {
 #define Color_Light_White   0xBDD7
 #define Color_Green         0x07E0
 #define Color_Light_Green   0x3460
+#define Color_Cyan          0x07FF
+#define Color_Light_Cyan    0x04F3
 #define Color_Blue          0x015F
 #define Color_Light_Blue    0x3A6A
 #define Color_Magenta       0xF81F
 #define Color_Light_Magenta 0x9813
 #define Color_Red           0xF800
 #define Color_Light_Red     0x8800
+#define Color_Orange        0xFA20
+#define Color_Light_Orange  0xFBC0
 #define Color_Yellow        0xFF0F
 #define Color_Light_Yellow  0x8BE0
 #define Color_Brown         0xCC27
 #define Color_Light_Brown   0x6204
 #define Color_Black         0x0000
 #define Color_Grey          0x18E3
-#define Color_Cyan          0x07FF
-#define Color_Light_Cyan    0x04F3
 #define Color_Bg_Window     0x31E8  // Popup background color
 #define Color_Bg_Blue       0x1125  // Dark blue background color
 #define Color_Bg_Black      0x0841  // Black background color
@@ -266,7 +268,7 @@ public:
     uint8_t coordinates_split_line : 4;
   } eeprom_settings;
 
-  char *color_names[10] = {(char*)"Default",(char*)"White",(char*)"Green",(char*)"Blue",(char*)"Magenta",(char*)"Red",(char*)"Yellow",(char*)"Brown",(char*)"Cyan",(char*)"Black"};
+  char *color_names[11] = {(char*)"Default",(char*)"White",(char*)"Green",(char*)"Cyan",(char*)"Blue",(char*)"Magenta",(char*)"Red",(char*)"Orange",(char*)"Yellow",(char*)"Brown",(char*)"Black"};
 
   bool beeperenable = true;
 
