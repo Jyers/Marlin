@@ -36,7 +36,7 @@ enum processID : uint8_t {
 };
 
 enum popupID : uint8_t {
-  Pause, Stop, Resume, SaveLevel, ETemp, ConfLevel, Level, Home, MoveWait, Heating, Complete, FilLoad, FilChange, UI, TempWarn, Runout, PIDWait
+  Pause, Stop, Resume, SaveLevel, ETemp, ConfLevel, ConfFilChange, Level, Home, MoveWait, Heating, Complete, FilLoad, FilChange, UI, TempWarn, Runout, PIDWait
 };
 
 enum menuID : uint8_t {
@@ -252,6 +252,7 @@ class CrealityDWINClass {
 public:
   struct EEPROM_Settings { // use bit fields to save space, max 48 bytes
     bool time_format_textual : 1;
+    bool beeperenable : 1;
     #if ENABLED(AUTO_BED_LEVELING_UBL)
       uint8_t tilt_grid_size : 3;
     #endif
@@ -270,7 +271,6 @@ public:
 
   char *color_names[11] = {(char*)"Default",(char*)"White",(char*)"Green",(char*)"Cyan",(char*)"Blue",(char*)"Magenta",(char*)"Red",(char*)"Orange",(char*)"Yellow",(char*)"Brown",(char*)"Black"};
 
-  bool beeperenable = true;
 
   inline void Clear_Screen(uint8_t e=3);
   inline void Draw_Float(float value, uint8_t row, bool selected=false, uint8_t minunit=10);

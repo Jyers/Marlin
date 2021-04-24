@@ -266,7 +266,7 @@ CrealityDWINClass CrealityDWIN;
           DEBUG_DELAY(20);
         }
 
-        apply_rotation_xyz(rotation, mx, my, mz);
+        rotation.apply_rotation_xyz(mx, my, mz);
 
         if (DEBUGGING(LEVELING)) {
           DEBUG_ECHOPAIR_F("after rotation = [", mx, 7);
@@ -2864,11 +2864,11 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         case ADVANCED_BEEPER:
           if (draw) {
             Draw_Menu_Item(row, ICON_Version, (char*)"LCD Beeper");
-            Draw_Checkbox(row, beeperenable);
+            Draw_Checkbox(row, eeprom_settings.beeperenable);
           }
           else {
-            beeperenable = !beeperenable;
-            Draw_Checkbox(row, beeperenable);
+            eeprom_settings.beeperenable = !eeprom_settings.beeperenable;
+            Draw_Checkbox(row, eeprom_settings.beeperenable);
           }
           break;
         #if ENABLED(HAS_BED_PROBE)
@@ -3688,12 +3688,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Draw_Menu_Item(row, ICON_ResumeEEPROM, (char*)"Change Filament");
             }
             else {
-              Popup_Handler(FilChange);
-              char buf[20];
-              sprintf(buf, "M600 B1 R%i", thermalManager.temp_hotend[0].target);
-              gcode.process_subcommands_now_P(buf);
-              planner.synchronize();
-              Redraw_Menu();
+              Popup_Handler(ConfFilChange);
             }
             break;
         #endif
@@ -4088,6 +4083,9 @@ void CrealityDWINClass::Popup_Handler(uint8_t popupid, bool option/*=false*/) {
       break;
     case ConfLevel:
       Draw_Popup((char*)"Confirm Leveling", (char*)"", (char*)"", Popup);
+      break;
+    case ConfFilChange:
+      Draw_Popup((char*)"Confirm Filament Change", (char*)"", (char*)"", Popup);
       break;
     case SaveLevel:
       Draw_Popup((char*)"Leveling Complete", (char*)"Save to EEPROM?", (char*)"", Popup);
@@ -4580,6 +4578,27 @@ inline void CrealityDWINClass::Popup_Control() {
           Redraw_Menu();
         }
         break;
+      case ConfFilChange:
+        if (selection==0) {
+          if (thermalManager.temp_hotend[0].target < thermalManager.extrude_min_temp) {
+            Popup_Handler(ETemp);
+          }
+          else {
+            if (thermalManager.temp_hotend[0].celsius < thermalManager.temp_hotend[0].target-2) {
+              Popup_Handler(Heating);
+              thermalManager.wait_for_hotend(0);
+            }
+            Popup_Handler(FilChange);
+            char buf[20];
+            sprintf(buf, "M600 B1 R%i", thermalManager.temp_hotend[0].target);
+            gcode.process_subcommands_now_P(buf);
+            planner.synchronize();
+            Redraw_Menu();
+          }
+        } else {
+          Redraw_Menu();
+        }
+        break;
       case ConfLevel:
         if (selection==0) {
           Popup_Handler(Level);
@@ -4730,6 +4749,7 @@ void CrealityDWINClass::Start_Print(bool sd) {
 
 void CrealityDWINClass::Stop_Print() {
   printing = false;
+  sdprint = false;
   thermalManager.zero_fan_speeds();
   thermalManager.disable_all_heaters();
   ui.set_progress(100 * (PROGRESS_SCALE));
