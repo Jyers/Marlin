@@ -616,6 +616,7 @@ void CrealityDWINClass::Draw_Print_Screen() {
   selection = 0;
   Clear_Screen();
   DWIN_Draw_Rectangle(1, Color_Bg_Black, 8, 352, DWIN_WIDTH-8, 376);
+  Draw_Title((char*)"Printing...");
   Print_Screen_Icons();
   DWIN_ICON_Show(ICON, ICON_PrintTime, 14, 171);
   DWIN_ICON_Show(ICON, ICON_RemainTime, 147, 169);
@@ -703,8 +704,8 @@ void CrealityDWINClass::Draw_Print_confirm() {
   popup = Complete;
   DWIN_Draw_Rectangle(1, Color_Bg_Black, 8, 252, 263, 351);
   DWIN_ICON_Show(ICON, ICON_Confirm_E, 87, 283);
-  DWIN_Draw_Rectangle(0, Select_Color, 86, 282, 187, 321);
-  DWIN_Draw_Rectangle(0, Select_Color, 85, 281, 188, 322);
+  DWIN_Draw_Rectangle(0, GetColor(eeprom_settings.highlight_box, Color_White), 86, 282, 187, 321);
+  DWIN_Draw_Rectangle(0, GetColor(eeprom_settings.highlight_box, Color_White), 85, 281, 188, 322);
 }
 
 void CrealityDWINClass::Draw_SD_Item(uint8_t item, uint8_t row) {
@@ -767,10 +768,12 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
     if (thermalManager.temp_hotend[0].celsius != hotend) {
       hotend = thermalManager.temp_hotend[0].celsius;
       DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(eeprom_settings.status_area_text, Color_White), Color_Bg_Black, 3, 28, 384, thermalManager.temp_hotend[0].celsius);
+      DWIN_Draw_DegreeSymbol(GetColor(eeprom_settings.status_area_text, Color_White), 25 + 3 * STAT_CHR_W + 5, 386);
     }
     if (thermalManager.temp_hotend[0].target != hotendtarget) {
       hotendtarget = thermalManager.temp_hotend[0].target;
       DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(eeprom_settings.status_area_text, Color_White), Color_Bg_Black, 3, 25 + 4 * STAT_CHR_W + 6, 384, thermalManager.temp_hotend[0].target);
+      DWIN_Draw_DegreeSymbol(GetColor(eeprom_settings.status_area_text, Color_White), 25 + 4 * STAT_CHR_W + 39, 386);
     }
     if (icons) {
       flow = -1;
@@ -795,10 +798,12 @@ void CrealityDWINClass::Draw_Status_Area(bool icons/*=false*/) {
     if (thermalManager.temp_bed.celsius != bed) {
       bed = thermalManager.temp_bed.celsius;
       DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(eeprom_settings.status_area_text, Color_White), Color_Bg_Black, 3, 28, 417, thermalManager.temp_bed.celsius);
+      DWIN_Draw_DegreeSymbol(GetColor(eeprom_settings.status_area_text, Color_White), 25 + 3 * STAT_CHR_W + 5, 419);
     }
     if (thermalManager.temp_bed.target != bedtarget) {
       bedtarget = thermalManager.temp_bed.target;
       DWIN_Draw_IntValue(true, true, 0, DWIN_FONT_STAT, GetColor(eeprom_settings.status_area_text, Color_White), Color_Bg_Black, 3, 25 + 4 * STAT_CHR_W + 6, 417, thermalManager.temp_bed.target);
+      DWIN_Draw_DegreeSymbol(GetColor(eeprom_settings.status_area_text, Color_White), 25 + 4 * STAT_CHR_W + 39, 419);
     }
   #endif
 
@@ -906,8 +911,8 @@ void CrealityDWINClass::Draw_Popup(const char *line1, const char *line2,const ch
 }
 
 void CrealityDWINClass::Popup_Select() {
-  const uint16_t c1 = (selection==0) ? Select_Color : Color_Bg_Window,
-                 c2 = (selection==0) ? Color_Bg_Window : Select_Color;
+  const uint16_t c1 = (selection==0) ? GetColor(eeprom_settings.highlight_box, Color_White) : Color_Bg_Window,
+                 c2 = (selection==0) ? Color_Bg_Window : GetColor(eeprom_settings.highlight_box, Color_White);
   DWIN_Draw_Rectangle(0, c1, 25, 279, 126, 318);
   DWIN_Draw_Rectangle(0, c1, 24, 278, 127, 319);
   DWIN_Draw_Rectangle(0, c2, 145, 279, 246, 318);
