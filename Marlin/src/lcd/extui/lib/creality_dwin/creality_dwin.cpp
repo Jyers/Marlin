@@ -334,6 +334,9 @@ inline uint16_t CrealityDWINClass::GetColor(uint8_t color, uint16_t original, bo
     case Green:
       return (light) ? Color_Light_Green : Color_Green;
       break;
+    case Cyan:
+      return (light) ? Color_Light_Cyan : Color_Cyan;
+      break; 
     case Blue:
       return (light) ? Color_Light_Blue : Color_Blue;
       break;
@@ -342,15 +345,15 @@ inline uint16_t CrealityDWINClass::GetColor(uint8_t color, uint16_t original, bo
       break;
     case Red:
       return (light) ? Color_Light_Red : Color_Red;
+      break;
+    case Orange:
+      return (light) ? Color_Light_Orange : Color_Orange;
       break;  
     case Yellow:
       return (light) ? Color_Light_Yellow : Color_Yellow;
       break;
     case Brown:
       return (light) ? Color_Light_Brown : Color_Brown;
-      break; 
-    case Cyan:
-      return (light) ? Color_Light_Cyan : Color_Cyan;
       break;          
     case Black:
       return Color_Black;
@@ -2738,7 +2741,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Option(eeprom_settings.cursor_color, color_names, row, false, true);
           }
           else {
-            Modify_Option(eeprom_settings.cursor_color, color_names, Custom_Colors_no_Black);
+            Modify_Option(eeprom_settings.cursor_color, color_names, Custom_Colors);
           }
           break;
           case COLORSETTINGS_SPLIT_LINE:
@@ -2774,7 +2777,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Option(eeprom_settings.highlight_box, color_names, row, false, true);
           }
           else {
-            Modify_Option(eeprom_settings.highlight_box, color_names, Custom_Colors_no_Black);
+            Modify_Option(eeprom_settings.highlight_box, color_names, Custom_Colors);
           }
           break; 
           case COLORSETTINGS_PROGRESS_PERCENT:
@@ -2783,7 +2786,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Option(eeprom_settings.progress_percent, color_names, row, false, true);
           }
           else {
-            Modify_Option(eeprom_settings.progress_percent, color_names, Custom_Colors_no_Black);
+            Modify_Option(eeprom_settings.progress_percent, color_names, Custom_Colors);
           }
           break;  
           case COLORSETTINGS_PROGRESS_TIME:
@@ -2792,7 +2795,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Option(eeprom_settings.progress_time, color_names, row, false, true);
           }
           else {
-            Modify_Option(eeprom_settings.progress_time, color_names, Custom_Colors_no_Black);
+            Modify_Option(eeprom_settings.progress_time, color_names, Custom_Colors);
           }
           break;           
           case COLORSETTINGS_PROGRESS_STATUS_BAR:
@@ -2801,7 +2804,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Option(eeprom_settings.status_bar_text, color_names, row, false, true);
           }
           else {
-            Modify_Option(eeprom_settings.status_bar_text, color_names, Custom_Colors_no_Black);
+            Modify_Option(eeprom_settings.status_bar_text, color_names, Custom_Colors);
           }
           break;  
           case COLORSETTINGS_PROGRESS_STATUS_AREA:
@@ -2810,7 +2813,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Option(eeprom_settings.status_area_text, color_names, row, false, true);
           }
           else {
-            Modify_Option(eeprom_settings.status_area_text, color_names, Custom_Colors_no_Black);
+            Modify_Option(eeprom_settings.status_area_text, color_names, Custom_Colors);
           }
           break;  
           case COLORSETTINGS_PROGRESS_COORDINATES:
@@ -2819,7 +2822,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             Draw_Option(eeprom_settings.coordinates_text, color_names, row, false, true);
           }
           else {
-            Modify_Option(eeprom_settings.coordinates_text, color_names, Custom_Colors_no_Black);
+            Modify_Option(eeprom_settings.coordinates_text, color_names, Custom_Colors);
           }
           break;     
           case COLORSETTINGS_PROGRESS_COORDINATES_LINE:
