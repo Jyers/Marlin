@@ -3396,7 +3396,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             else {
               if (!mesh_conf.mesh_step_warning && !mesh_conf.goto_mesh_value) {
                 CrealityDWIN.Confirm_Handler((char*)"Z-value not in position");
-                mesh_conf.  mesh_step_warning = true;
+                mesh_conf.mesh_step_warning = true;
               } else if (ubl.z_values[mesh_conf.mesh_x][mesh_conf.mesh_y] < MAX_Z_OFFSET) {
                 ubl.z_values[mesh_conf.mesh_x][mesh_conf.mesh_y] += 0.01;
                 gcode.process_subcommands_now_P(PSTR("M290 Z0.01"));
