@@ -16,7 +16,7 @@ E3V2-UBL-BLTouch-15x15-HS-v4.2.2.bin
 
 ## Credits
 
-# Ender 3 V2 Extensible UI
+Ender 3 V2 Extensible UI
 https://github.com/Jyers/Marlin
 
 
