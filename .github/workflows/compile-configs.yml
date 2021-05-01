@@ -54,17 +54,17 @@ jobs:
         BOARD: ${{ matrix.board }}
         GRID: ${{ matrix.grid }}
         HS: ${{ matrix.highspeed }}
-    # - name: Get release
-    #   id: get_release
-    #   uses: bruceadams/get-release@v1.2.2
-    #   env:
-    #     GITHUB_TOKEN: ${{ github.token }}
-    # - name: Upload Release Asset
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   with:
-    #     upload_url: ${{ steps.get_release.outputs.upload_url }}
-    #     asset_path: temp/build.bin
-    #     asset_name: ${{ steps.build_configs.outputs.filename }}
-    #     asset_content_type: application/x-binary
+    - name: Get release
+      id: get_release
+      uses: bruceadams/get-release@v1.2.2
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_release.outputs.upload_url }}
+        asset_path: temp/build.bin
+        asset_name: ${{ steps.build_configs.outputs.filename }}
+        asset_content_type: application/x-binary
