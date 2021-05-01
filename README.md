@@ -4,9 +4,6 @@ This version of the Extensible UI is customized for my own needs. Using it could
 
 ### Only these are compiled
 
-- E3V2-UBL-BLTouch-3x3-v4.2.2.bin
-- E3V2-UBL-BLTouch-3x3-HS-v4.2.2.bin
-
 - E3V2-UBL-BLTouch-5x5-v4.2.2.bin
 - E3V2-UBL-BLTouch-5x5-HS-v4.2.2.bin
 
