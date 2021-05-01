@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         board: [V4]
-        grid: [3,5,10,15]
+        grid: [5,10,15]
         highspeed: [true,false]
     steps:
     - uses: actions/checkout@v2
