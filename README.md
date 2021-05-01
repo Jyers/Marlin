@@ -5,6 +5,8 @@ This version of the Extensible UI is customized for my own needs. Using it could
 # My version has the following changes.
 
 Only these builds are compiled. (only for board 4.2.2.)
+- E3V2-UBL-BLTouch-3x3-HS-v4.2.2.bin
+- E3V2-UBL-BLTouch-5x5-HS-v4.2.2.bin
 - E3V2-UBL-BLTouch-10x10-HS-v4.2.2.bin
 - E3V2-UBL-BLTouch-15x15-HS-v4.2.2.bin
 ```
