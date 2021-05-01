@@ -2,8 +2,13 @@
 
 This version of the Extensible UI is customized for my own needs. Using it could harm your device(s). This fork was created from Jyers/Marlin.
 
-# My version has the following changes
-E3V2-UBL-BLTouch-15x15-HS-v4.2.2.bin
+# My version has the following changes.
+
+Only these builds are compiled. (only for board 4.2.2.)
+- E3V2-UBL-BLTouch-3x3-HS-v4.2.2.bin
+- E3V2-UBL-BLTouch-5x5-HS-v4.2.2.bin
+- E3V2-UBL-BLTouch-10x10-HS-v4.2.2.bin
+- E3V2-UBL-BLTouch-15x15-HS-v4.2.2.bin
 ```
 #define DEFAULT_AXIS_STEPS_PER_UNIT { 80, 80, 400, 97.84 }
 #define NOZZLE_TO_PROBE_OFFSET { -43, -7, 0 }
