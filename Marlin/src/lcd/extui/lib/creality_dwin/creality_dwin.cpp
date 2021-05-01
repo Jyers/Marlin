@@ -3679,7 +3679,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
           case TUNE_ZDOWN:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Axis, (char*)"Z-Offset Down");
+              Draw_Menu_Item(row, ICON_AxisD, (char*)"Z-Offset Down");
             }
             else {
               if (zoffsetvalue > MIN_Z_OFFSET) {
