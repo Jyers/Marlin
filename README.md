@@ -2,26 +2,23 @@
 
 This version of the Extensible UI is customized for my own needs. Using it could harm your device(s). This fork was created from Jyers/Marlin.
 
-### Only these are compiled
+### Only these builds are compiled (in High-Speed mode and only for the 4.2.2. board)
 
-- E3V2-UBL-BLTouch-5x5-v4.2.2.bin
-- E3V2-UBL-BLTouch-5x5-HS-v4.2.2.bin
+- E3V2-UBL-BLTouch-5x5
+- E3V2-UBL-BLTouch-10x10
+- E3V2-UBL-BLTouch-15x15
 
-- E3V2-UBL-BLTouch-10x10-v4.2.2.bin
-- E3V2-UBL-BLTouch-10x10-HS-v4.2.2.bin
-
-- E3V2-UBL-BLTouch-15x15-v4.2.2.bin
-- E3V2-UBL-BLTouch-15x15-HS-v4.2.2.bin
-
-### These settings are the default from now on:
+### These are the customized settings for these builds:
 
 ```
 #define DEFAULT_AXIS_STEPS_PER_UNIT { 80, 80, 400, 97.84 }
 #define NOZZLE_TO_PROBE_OFFSET { -43, -7, 0 }
 #define Z_MAX_POS 230
 ```
+You can change the "e-Steps" within the firmware menu also. This is also the case for the "Nozzle to Probe Offset".
 
-
+The hight is set to 23CM because I don't print that high and I had some accidents where I scrolled the wheel to much and it went to the top. 
+Because there is no "cancel" button, I added this as a safety feature to my builds.
 
 ## Credits
 
