@@ -1,5 +1,6 @@
-# Ender 3 V2 Extensible UI ### This fork was created from Jyers/Marlin.
-This version of the Extensible UI is customized for my own needs. Using it could harm your device(s). 
+# Ender 3 V2 Extensible UI
+
+This version of the Extensible UI is customized for my own needs. Using it could harm your device(s). This fork was created from Jyers/Marlin.
 
 ### Only these builds are compiled (in High-Speed mode and only for the 4.2.2. board)
 
@@ -16,8 +17,7 @@ This version of the Extensible UI is customized for my own needs. Using it could
 ```
 You can change the "e-Steps" within the firmware menu also. This is also the case for the "Nozzle to Probe Offset".
 
-The hight is set to 23CM because I don't print that high and I had some accidents where I scrolled the wheel to much and it went to the top. 
-Because there is no "cancel" button, I added this as a safety feature to my builds.
+The hight is set to 230mm because I don't print that high. I also had some accidents where I scrolled the wheel to much in the menu and it went to all the way to the top. Because there is no "cancel" button after selecting a X,Y or Z position, I added this as a safety feature to my builds.
 
 ## Credits
 
