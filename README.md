@@ -1,6 +1,5 @@
-# Ender 3 V2 Extensible UI
-
-This version of the Extensible UI is customized for my own needs. Using it could harm your device(s). This fork was created from Jyers/Marlin.
+# Ender 3 V2 Extensible UI ### This fork was created from Jyers/Marlin.
+This version of the Extensible UI is customized for my own needs. Using it could harm your device(s). 
 
 ### Only these builds are compiled (in High-Speed mode and only for the 4.2.2. board)
 
