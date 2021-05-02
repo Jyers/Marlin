@@ -89,7 +89,7 @@
 
 #define CORP_WEBSITE_E "github.com/Tuncay-Ayhan"
 
-#define BUILD_NUMBER "1.3.1"
+#define BUILD_NUMBER "1.3.2"
 
 #define DWIN_FONT_MENU font8x16
 #define DWIN_FONT_STAT font10x20
@@ -3151,6 +3151,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
                   gcode.process_subcommands_now_P(PSTR("G29 P0\nG29 P1"));
                   gcode.process_subcommands_now_P(PSTR("G29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nG29 P3\nM420 S1"));
                   planner.synchronize();
+                  Update_Status((char*)"Probed all reachable points");
                   Popup_Handler(SaveLevel);
                 #else
                   level_state = planner.leveling_active;
