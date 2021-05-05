@@ -12,7 +12,6 @@ This version of the Extensible UI is customized for my own needs. Using it could
 
 ```
 #define DEFAULT_AXIS_STEPS_PER_UNIT { 80, 80, 400, 97.84 }
-#define NOZZLE_TO_PROBE_OFFSET { -43, -7, 0 }
 #define Z_MAX_POS 230
 ```
 You can change the "e-Steps" within the firmware menu also. This is also the case for the "Nozzle to Probe Offset".
