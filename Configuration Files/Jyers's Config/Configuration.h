@@ -904,6 +904,13 @@
  */
 //#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
 
+//
+// See http://technologybob.co.uk/configuring-marlin-for-ender-3-v2
+//
+#define KILL_PIN PA7
+#define KILL_PIN_STATE HIGH
+
+
 // Force the use of the probe for Z-axis homing
 #define USE_PROBE_FOR_Z_HOMING
 
