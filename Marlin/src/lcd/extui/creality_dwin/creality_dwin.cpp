@@ -1548,7 +1548,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
           case PREHEAT_MODE:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Homing, (char*)"Bed Only Mode");
+              Draw_Menu_Item(row, ICON_BedTemp, (char*)"Bed Only Mode");
               Draw_Checkbox(row, bedonly);
             }
             else {
@@ -1783,7 +1783,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
           case CONTROL_RESET:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Temperature, (char*)"Reset to Defaults");
+              Draw_Menu_Item(row, ICON_ResumeEEPROM, (char*)"Reset to Defaults");
             }
             else {
               settings.reset();
@@ -1870,7 +1870,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #if (PREHEAT_COUNT >= 1)
           case TEMP_PREHEAT1:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Step, (char*)PREHEAT_1_LABEL, NULL, true);
+              Draw_Menu_Item(row, ICON_Temperature, (char*)PREHEAT_1_LABEL, NULL, true);
             }
             else {
               Draw_Menu(Preheat1);
@@ -1880,7 +1880,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #if (PREHEAT_COUNT >= 2)
           case TEMP_PREHEAT2:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Step, (char*)PREHEAT_2_LABEL, NULL, true);
+              Draw_Menu_Item(row, ICON_Temperature, (char*)PREHEAT_2_LABEL, NULL, true);
             }
             else {
               Draw_Menu(Preheat2);
@@ -1890,7 +1890,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #if (PREHEAT_COUNT >= 3)
           case TEMP_PREHEAT3:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Step, (char*)PREHEAT_3_LABEL, NULL, true);
+              Draw_Menu_Item(row, ICON_Temperature, (char*)PREHEAT_3_LABEL, NULL, true);
             }
             else {
               Draw_Menu(Preheat3);
@@ -1900,7 +1900,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #if (PREHEAT_COUNT >= 4)
           case TEMP_PREHEAT4:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Step, (char*)PREHEAT_4_LABEL, NULL, true);
+              Draw_Menu_Item(row, ICON_Temperature, (char*)PREHEAT_4_LABEL, NULL, true);
             }
             else {
               Draw_Menu(Preheat4);
@@ -1910,7 +1910,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #if (PREHEAT_COUNT >= 5)
           case TEMP_PREHEAT5:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Step, (char*)PREHEAT_5_LABEL, NULL, true);
+              Draw_Menu_Item(row, ICON_Temperature, (char*)PREHEAT_5_LABEL, NULL, true);
             }
             else {
               Draw_Menu(Preheat5);
