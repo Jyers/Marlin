@@ -1961,7 +1961,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
           #endif
           case PID_CYCLES:
             if (draw) {
-              Draw_Menu_Item(row, ICON_FanSpeed, (char*)"Cycles");
+              Draw_Menu_Item(row, ICON_ResumeEEPROM, (char*)"Cycles");
               Draw_Float(PID_cycles, row, false, 1);
             }
             else {
