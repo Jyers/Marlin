@@ -3913,7 +3913,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #if HAS_ZOFFSET_ITEM
           case TUNE_ZOFFSET:
             if (draw) {
-              Draw_Menu_Item(row, ICON_FanSpeed, (char*)"Z-Offset");
+              Draw_Menu_Item(row, ICON_SetZOffset, (char*)"Z-Offset");
               Draw_Float(zoffsetvalue, row, false, 100);
             }
             else {
