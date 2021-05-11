@@ -3077,7 +3077,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               break;
             case PROBE_TEST:
               if (draw) {
-                Draw_Menu_Item(row, ICON_StepY, (char*)"M48 Probe Test");
+                Draw_Menu_Item(row, ICON_StockConfiguraton, (char*)"M48 Probe Test");
               }
               else {
                 char buf[50];
@@ -3087,7 +3087,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               break;
             case PROBE_TEST_COUNT:
               if (draw) {
-                Draw_Menu_Item(row, ICON_StepY, (char*)"Probe Test Count");
+                Draw_Menu_Item(row, ICON_Step, (char*)"Probe Test Count");
                 Draw_Float(testcount, row, false, 1);
               }
               else {
