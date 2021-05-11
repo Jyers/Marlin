@@ -2948,7 +2948,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
         #if HAS_BED_PROBE
           case ADVANCED_PROBE:
             if (draw) {
-              Draw_Menu_Item(row, ICON_StepX, (char*)"Probe", NULL, true);
+              Draw_Menu_Item(row, ICON_StockConfiguraton, (char*)"Probe", NULL, true);
             }
             else {
               Draw_Menu(ProbeMenu);
@@ -3364,7 +3364,7 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
             break;
           case LEVELING_VIEW_ASYMMETRIC:
             if (draw) {
-              Draw_Menu_Item(row, ICON_Axis, (char*)"Viewer Asymmetric");
+              Draw_Menu_Item(row, ICON_AxisC, (char*)"Viewer Asymmetric");
               Draw_Checkbox(row, mesh_conf.viewer_asymmetric_range);
             }
             else {
